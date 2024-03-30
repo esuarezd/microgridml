@@ -6,6 +6,7 @@
 [![Stargazers][sample-list-stars-shield]][sample-list-stars-url]
 [![Issues][sample-list-issues-shield]][sample-list-issues-url]
 [![License][sample-list-license-shield]][sample-list-license-url]
+[![linkedin-url]]
 
 This is the repository for the project in the Universidad de los Andes. This saves th configuration and data files in the IoT system for a microgrid at ML building. 
 [adam]· [cerbogx] · [Report Bug][sample-list-bugs-url] · [Request Feature][sample-list-issues-url]
@@ -96,7 +97,7 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 [issues-shield]: https://img.shields.io/github/issues/esuarezd/microgridml.svg?style=for-the-badge
 [issues-url]: https://github.com/esuarezd/microgridml/issues
 [license-shield]: https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge
-[license-url]: https://github.com/esuarezd/microgridml/main/LICENSE
+[license-url]: https://github.com/esuarezd/microgridml/blob/main/LICENSE
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/esuarezd
 [product-screenshot]: images/screenshot.png 
