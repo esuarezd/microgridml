@@ -1,15 +1,15 @@
 <!-- MICROGRID ML-->
 # microgrid ml
 <!-- PROJECT SHIELDS -->
-[![Contributors][sample-list-contributors-shield]][sample-list-contributors-url]
-[![Forks][sample-list-forks-shield]][sample-list-forks-url]
-[![Stargazers][sample-list-stars-shield]][sample-list-stars-url]
-[![Issues][sample-list-issues-shield]][sample-list-issues-url]
-[![License][sample-list-license-shield]][sample-list-license-url]
-[![linkedin-url]]
+[![Contributors][microgridml-contributors-shield]][microgridml-contributors-url]
+[![Forks][microgridml-forks-shield]][microgridml-forks-url]
+[![Stargazers][microgridml-stars-shield]][microgridml-stars-url]
+[![Issues][microgridml-issues-shield]][microgridml-issues-url]
+[![License][microgridml-license-shield]][microgridml-license-url]
+[![linkedin][microgridml-linkedin-shield][microgridml-linkedin-url]]
 
 This is the repository for the project in the Universidad de los Andes. This saves th configuration and data files in the IoT system for a microgrid at ML building. 
-[adam]· [cerbogx] · [Report Bug][sample-list-bugs-url] · [Request Feature][sample-list-issues-url]
+[adam]· [cerbogx] · [Report Bug][microgridml-bugs-url] · [Request Feature][microgridml-issues-url]
 
 <!-- PROJECT CONTENT -->
 **Table of Contents (up to date)**
@@ -87,7 +87,7 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-<!-- links for DISClib -->
+<!-- links for esuarezd -->
 [contributors-shield]: https://img.shields.io/github/contributors/esuarezd/microgridml.svg?style=for-the-badge
 [contributors-url]: https://github.com/esuarezd/microgridml/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/esuarezd/microgridml.svg?style=for-the-badge
@@ -106,15 +106,17 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 [edisonsuarez-url]: https://github.com/esuarezd
 
 <!-- links for microgridml repository -->
-[sample-list-contributors-shield]: https://img.shields.io/github/contributors/esuarezd/microgridml.svg?style=for-the-badge
-[sample-list-contributors-url]: https://github.com/esuarezd/microgridml/graphs/contributors
-[sample-list-forks-shield]: https://img.shields.io/github/forks/esuarezd/microgridml.svg?style=for-the-badge
-[sample-list-forks-url]: https://github.com/esuarezd/microgridml/network/members
-[sample-list-stars-shield]: https://img.shields.io/github/stars/esuarezd/microgridml.svg?style=for-the-badge
-[sample-list-stars-url]: https://github.com/esuarezd/microgridml/stargazers
-[sample-list-issues-shield]: https://img.shields.io/github/issues/esuarezd/microgridml.svg?style=for-the-badge
-[sample-list-issues-url]: https://github.com/esuarezd/microgridml/issues
-[sample-list-license-shield]: https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge
-[sample-list-license-url]: https://github.com/esuarezd/microgridml/blob/master/LICENSE
-[sample-list-bugs-url]: https://github.com/esuarezd/microgridml/issues
-[sample-list-issues-url]: https://github.com/esuarezd/microgridml/issues
+[microgridml-contributors-shield]: https://img.shields.io/github/contributors/esuarezd/microgridml.svg?style=for-the-badge
+[microgridml-contributors-url]: https://github.com/esuarezd/microgridml/graphs/contributors
+[microgridml-forks-shield]: https://img.shields.io/github/forks/esuarezd/microgridml.svg?style=for-the-badge
+[microgridml-forks-url]: https://github.com/esuarezd/microgridml/network/members
+[microgridml-stars-shield]: https://img.shields.io/github/stars/esuarezd/microgridml.svg?style=for-the-badge
+[microgridml-stars-url]: https://github.com/esuarezd/microgridml/stargazers
+[microgridml-issues-shield]: https://img.shields.io/github/issues/esuarezd/microgridml.svg?style=for-the-badge
+[microgridml-issues-url]: https://github.com/esuarezd/microgridml/issues
+[microgridml-license-shield]: https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge
+[microgridml-license-url]: https://github.com/esuarezd/microgridml/blob/main/LICENSE
+[microgridml-bugs-url]: https://github.com/esuarezd/microgridml/issues
+[microgridml-issues-url]: https://github.com/esuarezd/microgridml/issues
+[microgridml-linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
+[microgrid-linkedin-url]: https://linkedin.com/in/esuarezd
