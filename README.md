@@ -6,7 +6,7 @@
 [![Stargazers][microgridml-stars-shield]][microgridml-stars-url]
 [![Issues][microgridml-issues-shield]][microgridml-issues-url]
 [![License][microgridml-license-shield]][microgridml-license-url]
-[![linkedin][microgridml-linkedin-shield][microgridml-linkedin-url]]
+[![linkedin][microgridml-linkedin-shield]][microgridml-linkedin-url]
 
 This is the repository for the project in the Universidad de los Andes. This saves th configuration and data files in the IoT system for a microgrid at ML building. 
 [adam]· [cerbogx] · [Report Bug][microgridml-bugs-url] · [Request Feature][microgridml-issues-url]
