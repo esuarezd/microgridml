@@ -119,4 +119,4 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 [microgridml-bugs-url]: https://github.com/esuarezd/microgridml/issues
 [microgridml-issues-url]: https://github.com/esuarezd/microgridml/issues
 [microgridml-linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[microgrid-linkedin-url]: https://linkedin.com/in/esuarezd
+[microgridml-linkedin-url]: https://linkedin.com/in/esuarezd
