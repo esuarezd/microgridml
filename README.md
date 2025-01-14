@@ -38,7 +38,7 @@ It is a repository to develop a iot system for a microgrid at ML Builind at Univ
 This laboratory repository has four main parts:
 
 1. [adam](./adam) config and data files to monitor and control the sensor of the solar panels.
-1. [cergogx](./cerbogx) config and data files to monitor and control the bms, solarcharger and inverters.
+1. [cerbogx](./cerbogx) config and data files to monitor and control the bms, solarcharger and inverters.
 1. [Data](./Data) Folder with CSV data files to load into the application. In here the students add the data files provided by the course staff to complete the laboratory.
 1. [location](./location) Folder with the config files about the location of the physical framework.
 
