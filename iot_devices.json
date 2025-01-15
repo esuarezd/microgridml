@@ -6,8 +6,7 @@
         "ip_address": "157.253.200.174",
         "protocol":"MosbusTcpClient",
         "enabled": false,
-        "connection_status":"Unknown",
-        "poll_rate_min": 5
+        "connection_status":"Unknown"
     },
     {
         "device_id": 1,
@@ -16,8 +15,7 @@
         "ip_address": "157.253.200.175",
         "protocol":"MosbusTcpClient",
         "enabled": false,
-        "connection_status":"Unknown",
-        "poll_rate_min": 5
+        "connection_status":"Unknown"
     },
     {
         "device_id": 2,
@@ -26,8 +24,7 @@
         "ip_address": "157.253.200.176",
         "protocol":"MosbusTcpClient",
         "enabled": false,
-        "connection_status":"Unknown",
-        "poll_rate_min": 5
+        "connection_status":"Unknown"
     },
     {
         "device_id": 3,
@@ -36,7 +33,6 @@
         "ip_address": "157.253.200.177",
         "protocol":"MosbusTcpClient",
         "enabled": false,
-        "connection_status":"Unknown",
-        "poll_rate_min": 5
+        "connection_status":"Unknown"
     }
 ]
