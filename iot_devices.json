@@ -3,8 +3,8 @@
         "device_id": 0,
         "device_name":"adam6017",
         "description":"IoT device for PV measurements",
-        "ip_address": "157.253.200.174",
-        "protocol":"MosbusTcpClient",
+        "ip_address": "157.253.199.199",
+        "protocol_id": 0,
         "enabled": false,
         "connection_status":"Unknown"
     },
@@ -12,8 +12,8 @@
         "device_id": 1,
         "device_name":"mg3280",
         "description":"IoT device for PV measurements",
-        "ip_address": "157.253.200.175",
-        "protocol":"MosbusTcpClient",
+        "ip_address": "157.253.199.152",
+        "protocol_id": 0,
         "enabled": false,
         "connection_status":"Unknown"
     },
@@ -22,7 +22,7 @@
         "device_name":"cerbogx",
         "description":"IoT device Victron System",
         "ip_address": "157.253.200.176",
-        "protocol":"MosbusTcpClient",
+        "protocol_id": 0,
         "enabled": false,
         "connection_status":"Unknown"
     },
@@ -31,7 +31,7 @@
         "device_name":"adam6060",
         "description":"IoT device CB Control",
         "ip_address": "157.253.200.177",
-        "protocol":"MosbusTcpClient",
+        "protocol_id": 0,
         "enabled": false,
         "connection_status":"Unknown"
     }

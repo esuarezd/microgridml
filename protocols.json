@@ -1,0 +1,12 @@
+[
+    {
+        "protocolo_id": 0,
+        "protocolo_name":"Modbus Tcp Client",
+        "port": 502
+    },
+    {
+        "protocolo_id": 1,
+        "protocolo_name":"Mqtt",
+        "port": 1883
+    }
+]

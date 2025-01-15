@@ -9,8 +9,8 @@ st.set_page_config(
     page_icon="☀️"  # Ícono de sol
 )
 
-st.title("Aplicación Streamlit en Raspberry Pi")
-st.write("Hola, esta es mi primera aplicación web con Streamlit en la Raspberry Pi.")
+st.title("Microgrid ML")
+st.write("Sistema de comunicaciones")
 
 iot_devices = load_json("iot_devices.json")
 
