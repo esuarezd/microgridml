@@ -19,7 +19,6 @@ def connect_and_read(device):
         client = ModbusTcpClient(device["ip_address"])
         if client.connect():
             device["connection_status"] = "OK"
-            # Aquí puedes agregar la lógica para leer datos del dispositivo.
         else:
             device["connection_status"] = "Failure"
     else:
@@ -28,9 +27,10 @@ def connect_and_read(device):
 # Actualizar el estado de los dispositivos
 def update_device_status(devices, protocols):
     for device in devices:
+        if "protocol_name" not in device:
+            device["protocol_name"] = get_protocol_name(device["protocol_id"], protocols)
         if device["enabled"]:
             connect_and_read(device)
         else:
             device["connection_status"] = "Unknown"
-        device["protocol_name"] = get_protocol_name(device["protocol_id"], protocols)
     return devices
