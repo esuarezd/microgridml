@@ -5,7 +5,8 @@
         "description":"IoT device for PV measurements",
         "ip_address": "157.253.200.174",
         "protocol":"MosbusTcpClient",
-        "enabled": False
+        "enabled": False,
+        "connection_status":"Unknown"
     },
     {
         "device_id": 1,
@@ -13,7 +14,8 @@
         "description":"IoT device for PV measurements",
         "ip_address": "157.253.200.175",
         "protocol":"MosbusTcpClient",
-        "enabled": False
+        "enabled": False,
+        "connection_status":"Unknown"
     },
     {
         "device_id": 2,
@@ -21,7 +23,8 @@
         "description":"IoT device Victron System",
         "ip_address": "157.253.200.176",
         "protocol":"MosbusTcpClient",
-        "enabled": False
+        "enabled": False,
+        "connection_status":"Unknown"
     },
     {
         "device_id": 3,
@@ -29,6 +32,7 @@
         "description":"IoT device CB Control",
         "ip_address": "157.253.200.177",
         "protocol":"MosbusTcpClient",
-        "enabled": False
+        "enabled": False,
+        "connection_status":"Unknown"
     }
 ]
