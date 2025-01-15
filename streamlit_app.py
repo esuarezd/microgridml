@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # Menú de navegación
-menu = st.sidebar.selectbox(
+menu = st.sidebar.radio(
     "Menú",
     options=["Home", "Comm"],
     index=0

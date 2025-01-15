@@ -6,20 +6,26 @@ def get_json(path):
     with open(path, "r") as file:
         return json.load(file)
 
+# Crear un diccionario de búsqueda para protocolos
+def build_protocol_lookup(protocols):
+    return {protocol["protocol_id"]: protocol["protocol_name"] for protocol in protocols}
+
+# Obtener dispositivos IoT con el nombre del protocolo agregado
 def get_iot_devices():
     iot_devices = get_json("iot_devices.json")
     protocols = get_json("protocols.json")
+    protocol_lookup = build_protocol_lookup(protocols)  # Crear diccionario de búsqueda
+    '''
+    protocol_lookup = {
+    0: "ModbusTcpClient",
+    1: "Mqtt"
+    }
+    '''
     for device in iot_devices:
-        # Añadir el nombre del protocolo si no existe
-        device["protocol_name"] = get_protocol_name(device["protocol_id"], protocols)
+        # Asignar el nombre del protocolo desde el diccionario de búsqueda
+        device["protocol_name"] = protocol_lookup.get(device["protocol_id"], "Unknown Protocol")
+    
     return iot_devices
-
-# Obtener el nombre del protocolo
-def get_protocol_name(protocol_id, protocols):
-    for protocol in protocols:
-        if protocol["protocol_id"] == protocol_id:
-            return protocol["protocol_name"]
-    return "Unknown Protocol"
 
 # Conectar al dispositivo IoT
 def connect_device(device):
