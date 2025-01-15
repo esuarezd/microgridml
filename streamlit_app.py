@@ -1,10 +1,9 @@
 import streamlit as st
 import pandas as pd
-from data_collect import load_json, update_devices_status
+import data_collect
 
 # Cargar dispositivos IoT y protocolos
-iot_devices = load_json("iot_devices.json")
-protocols = load_json("protocols.json")
+iot_devices = data_collect.get_iot_devices()
 
 # Configuración de la página
 st.set_page_config(
@@ -27,10 +26,6 @@ if menu == "Home":
 elif menu == "Comm":
     st.title("Comm - Estado de Comunicaciones")
     st.subheader("Estado de los Dispositivos IoT")
-
-    # Actualizar el estado de los dispositivos
-    update_devices_status(iot_devices, protocols)
-
     # Encabezados de las columnas
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
@@ -47,12 +42,22 @@ elif menu == "Comm":
     # Filas dinámicas para cada dispositivo
     for device in iot_devices:
         col1, col2, col3, col4, col5 = st.columns(5)
+
+        # Casilla de habilitación sin duplicar texto
         with col1:
-            # Casilla de habilitación
-            device["enabled"] = st.checkbox(
-                f"Activar {device['device_name']}",
-                value=device["enabled"]
-            )
+            was_enabled = device["enabled"]
+            device["enabled"] = st.checkbox("", 
+                                            value=device["enabled"], 
+                                            key=f"enabled_{device['device_id']}"  # Clave única basada en el ID del dispositivo
+                                            )
+
+            # Si cambia el estado de "enabled", conecta o desconecta el dispositivo
+            if device["enabled"] != was_enabled:
+                if device["enabled"]:
+                    data_collect.connect_device(device)  # Intenta conectar
+                else:
+                    device["connection_status"] = "Unknown"  # Desconexión
+
         with col2:
             st.write(device["device_name"])
         with col3:
@@ -60,7 +65,6 @@ elif menu == "Comm":
         with col4:
             st.write(device["protocol_name"])
         with col5:
-            # Mostrar estado de conexión
             status_color = (
                 "green" if device["connection_status"] == "OK" else
                 "red" if device["connection_status"] == "Failure" else
@@ -70,3 +74,6 @@ elif menu == "Comm":
                 f"<span style='color: {status_color}; font-weight: bold;'>{device['connection_status']}</span>",
                 unsafe_allow_html=True
             )
+
+    # Refrescar periódicamente si es necesario
+    st.button("Actualizar estado")  # Botón manual para actualizar
