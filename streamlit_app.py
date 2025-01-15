@@ -8,7 +8,7 @@ protocols = load_json("protocols.json")
 
 # Configuración de la página
 st.set_page_config(
-    layout="wide",  
+    layout="wide",
     page_title="microgrid ml",
     page_icon="☀️"  # Ícono de sol
 )
@@ -23,7 +23,7 @@ menu = st.sidebar.selectbox(
 if menu == "Home":
     st.title("Home - Datos de los Dispositivos IoT")
     st.write("Próximamente se mostrarán los datos leídos de los dispositivos.")
-    
+
 elif menu == "Comm":
     st.title("Comm - Estado de Comunicaciones")
     st.subheader("Estado de los Dispositivos IoT")
@@ -31,7 +31,20 @@ elif menu == "Comm":
     # Actualizar el estado de los dispositivos
     update_devices_status(iot_devices, protocols)
 
-    # Crear columnas dinámicas
+    # Encabezados de las columnas
+    col1, col2, col3, col4, col5 = st.columns(5)
+    with col1:
+        st.markdown("**Enabled**")
+    with col2:
+        st.markdown("**Device Name**")
+    with col3:
+        st.markdown("**IP Address**")
+    with col4:
+        st.markdown("**Protocol Name**")
+    with col5:
+        st.markdown("**Connection Status**")
+
+    # Filas dinámicas para cada dispositivo
     for device in iot_devices:
         col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
