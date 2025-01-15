@@ -5,7 +5,7 @@
         "description":"IoT device for PV measurements",
         "ip_address": "157.253.199.199",
         "protocol_id": 0,
-        "enabled": false,
+        "enabled": true,
         "connection_status":"Unknown"
     },
     {
@@ -14,7 +14,7 @@
         "description":"IoT device for PV measurements",
         "ip_address": "157.253.199.152",
         "protocol_id": 0,
-        "enabled": false,
+        "enabled": true,
         "connection_status":"Unknown"
     },
     {
@@ -23,7 +23,7 @@
         "description":"IoT device Victron System",
         "ip_address": "157.253.200.176",
         "protocol_id": 0,
-        "enabled": false,
+        "enabled": true,
         "connection_status":"Unknown"
     },
     {
@@ -32,7 +32,7 @@
         "description":"IoT device CB Control",
         "ip_address": "157.253.200.177",
         "protocol_id": 0,
-        "enabled": false,
+        "enabled": true,
         "connection_status":"Unknown"
     }
 ]

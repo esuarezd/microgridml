@@ -15,17 +15,21 @@ st.set_page_config(
 # Menú de navegación
 menu = st.sidebar.radio(
     "Menú",
-    options=["Home", "Comm"],
+    options=["Home", "His", "Comm"],
     index=0
 )
 
 if menu == "Home":
-    st.title("Home - Datos de los Dispositivos IoT")
-    st.write("Próximamente se mostrarán los datos leídos de los dispositivos.")
+    st.title("Microgrid ML")
+    st.write("Sistema IoT")
+
+elif menu == "His":
+    st.title("Microgrid ML")
+    st.write("Historial")
 
 elif menu == "Comm":
-    st.title("Comm - Estado de Comunicaciones")
-    st.subheader("Estado de los Dispositivos IoT")
+    st.title("Microgrid ML")
+    st.subheader("Estado comunicacion de los Dispositivos IoT")
     # Encabezados de las columnas
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
@@ -77,3 +81,4 @@ elif menu == "Comm":
 
     # Refrescar periódicamente si es necesario
     st.button("Actualizar estado")  # Botón manual para actualizar
+
