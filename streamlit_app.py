@@ -80,17 +80,15 @@ elif st.session_state["page"] == "Devices":
         # Realizar conexión si `enabled` es True y `protocol_id` es 0
         if device["enabled"]:
             data_collect.connect_device(device)
-        else:
-            connection_status = "N/A"
 
         # Mostrar el estado de la conexión
         with col6:
             status_color = (
-                "green" if connection_status == "OK" else
-                "red" if connection_status == "Failure" else "gray"
+                "green" if  device["connection_status"] == "OK" else
+                "red" if device["connection_status"] == "Failure" else "gray"
             )
             st.markdown(
-                f"<span style='color: {status_color}; font-weight: bold;'>{connection_status}</span>",
+                f"<span style='color: {status_color}; font-weight: bold;'>{device['connection_status']}</span>",
                 unsafe_allow_html=True
             )
 

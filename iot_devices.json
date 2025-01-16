@@ -3,7 +3,7 @@
         "device_id": 0,
         "device_name":"adam6017",
         "description":"IoT device for PV measurements",
-        "ip_address": "157.253.199.199",
+        "ip_address": "192.168.2.11",
         "protocol_id": 0,
         "enabled": true,
         "connection_status":"Unknown"
