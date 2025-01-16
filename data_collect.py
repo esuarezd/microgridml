@@ -29,12 +29,12 @@ def get_iot_devices():
 
 # Conectar al dispositivo IoT
 def connect_device(device):
-    if device["protocol_id"] == 0:  # Modbus Tcp Client
-        client = ModbusTcpClient(device["ip_address"])
-        if client.connect():
-            device["connection_status"] = "OK"
-        else:
-            device["connection_status"] = "Failure"
-    else:
-        device["connection_status"] = "Protocol Not Supported"
-
+    match device["protocol_id"]:
+        case 0: #ModbusTcpClient
+            client = ModbusTcpClient(device["ip_address"])
+            if client.connect():
+                device["connection_status"] = "OK"
+            else:
+                device["connection_status"] = "Failure"
+        case 1: #mqtt
+            pass

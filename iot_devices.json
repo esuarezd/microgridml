@@ -5,7 +5,7 @@
         "description":"IoT device for PV measurements",
         "ip_address": "157.253.199.199",
         "protocol_id": 0,
-        "enabled": false,
+        "enabled": true,
         "connection_status":"Unknown"
     },
     {
