@@ -4,6 +4,11 @@ import data_collect
 
 # Cargar dispositivos IoT y protocolos
 iot_devices = data_collect.get_iot_devices()
+iot_mapping = data_collect.get_iot_mapping()
+
+for i in range(len(iot_devices)):
+    if (iot_devices[i]["enabled"]):
+        data_collect.connect_device(iot_devices[i], iot_mapping[i]["mapping"])
 
 # Configuración de la página
 st.set_page_config(
@@ -12,12 +17,6 @@ st.set_page_config(
     page_icon="☀️"  # Ícono de sol
 )
 
-# Menú de navegación
-#menu = st.sidebar.radio(
-#    "Menú",
-#    options=["Home", "His", "Comm"],
-#    index=0
-#)
 # Inicializar el estado de navegación
 if "page" not in st.session_state:
     st.session_state["page"] = "Home"
@@ -36,6 +35,7 @@ if st.sidebar.button("Devices"):
 if st.session_state["page"] == "Home":
     st.title("Microgrid ML")
     st.write("Sistema IoT")
+    st.write(f"{iot_mapping[0]['mapping'][1]['name']}: {iot_mapping[0]['mapping'][1]['value']}")
 
 #elif menu == "His":
 elif st.session_state["page"] == "History":
@@ -77,10 +77,6 @@ elif st.session_state["page"] == "Devices":
         with col5:
             st.write(device["protocol_name"])
 
-        # Realizar conexión si `enabled` es True y `protocol_id` es 0
-        if device["enabled"]:
-            data_collect.connect_device(device)
-
         # Mostrar el estado de la conexión
         with col6:
             status_color = (
@@ -88,7 +84,7 @@ elif st.session_state["page"] == "Devices":
                 "red" if device["connection_status"] == "Failure" else "gray"
             )
             st.markdown(
-                f"<span style='color: {status_color}; font-weight: bold;'>{device['connection_status']}</span>",
+                f"<span style='color: {status_color};'>{device['connection_status']}</span>",
                 unsafe_allow_html=True
             )
 

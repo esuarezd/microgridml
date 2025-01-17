@@ -1,0 +1,24 @@
+[
+    {
+        "device_id": 0,
+        "mapping": [
+            {"unit_id": 1, "function_code":"04", "address": 0, "name": "AI 0 - Velocidad del viento"},
+            {"unit_id": 1, "function_code":"04", "address": 1, "name": "Ambiental Temperature in C", "scale_factor": 0.1, "offset": 0, "physical_range": "-40 to +90 ºC", "data_range": "-400 to 900", "data_type": "int16"},
+            {"unit_id": 1, "function_code":"04", "address": 2, "name": "AI 2 - Temp. Módulo String 1"}
+        ]
+    },
+    {
+        "device_id": 1,
+        "mapping": [
+            {"unit_id": 1, "function_code":"04", "address": 0, "name": "Irradiance in W/m2", "scale_factor": 0.1, "offset": 0, "physical_range": "0 to 1500 W/m2", "data_range": "0 to 15000", "data_type": "uint16"},
+            {"unit_id": 1, "function_code":"04", "address": 7, "name": "Cell Temperature in C", "scale_factor": 0.1, "offset": 0, "physical_range": "-40 to +90 ºC", "data_range": "-400 to 900", "data_type": "int16"}
+        ]
+    },
+    {
+        "device_id": 2,
+        "mapping": [
+            {"unit_id": 226, "function_code":"04", "address": 775, "name": "Charge State", "scale_factor": 1, "signed": false},
+            {"unit_id": 226, "function_code":"04", "address": 776, "name": "PV Voltaje", "scale_factor": 100, "signed": false}
+        ]
+    }
+]
