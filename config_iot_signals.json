@@ -2,26 +2,26 @@
     {
         "device_id": 0,
         "signals": [
-            {"signal_id": 0, "slave": 1, "function_code":"04", "address": 0, "name": "Speed Wind in m/s", "data_type": "uint16", "scale_factor": 0.1, "offset": 0, "physical_range": "0 to 50 m/s", "data_range": "0 to 500"},
-            {"signal_id": 1, "slave": 1, "function_code":"04", "address": 1, "name": "Ambiental Temperature", "data_type": "int16", "scale_factor": 0.1, "offset": 0, "physical_range": "-40 to +90 ºC", "data_range": "-400 to 900"},
-            {"signal_id": 2, "slave": 1, "function_code":"04", "address": 2, "name": "Module Temperature in String 1", "data_type": "int16", "scale_factor": 0.1, "offset": 0, "physical_range": "-40 to +90 ºC", "data_range": "-400 to 900"}
+            {"signal_id": 0, "obj_path": "PV", "slave": 1, "function_code":"04", "address": 0, "name": "Speed Wind in m/s", "data_type": "uint16", "scale_factor": 0.1, "offset": 0, "physical_range": "0 to 50 m/s", "data_range": "0 to 500"},
+            {"signal_id": 1, "obj_path": "PV", "slave": 1, "function_code":"04", "address": 1, "name": "Ambiental Temperature", "data_type": "int16", "scale_factor": 0.1, "offset": 0, "physical_range": "-40 to +90 ºC", "data_range": "-400 to 900"},
+            {"signal_id": 2, "obj_path": "PV", "slave": 1, "function_code":"04", "address": 2, "name": "Module Temperature in String 1", "data_type": "int16", "scale_factor": 0.1, "offset": 0, "physical_range": "-40 to +90 ºC", "data_range": "-400 to 900"}
         ]
     },
     {
         "device_id": 1,
         "signals": [
-            {"signal_id": 3, "slave": 1, "function_code":"04", "address": 0, "name": "Irradiance in W/m2", "data_type": "uint16", "scale_factor": 0.1, "offset": 0, "physical_range": "0 to 1500 W/m2", "data_range": "0 to 15000"},
-            {"signal_id": 4, "slave": 1, "function_code":"04", "address": 7, "name": "Cell Temperature in C", "data_type": "int16", "scale_factor": 0.1, "offset": 0, "physical_range": "-40 to +90 ºC", "data_range": "-400 to 900"}
+            {"signal_id": 3, "obj_path": "PV", "slave": 1, "function_code":"04", "address": 0, "name": "Cell Irradiance in W/m2", "data_type": "uint16", "scale_factor": 0.1, "offset": 0, "physical_range": "0 to 1500 W/m2", "data_range": "0 to 15000"},
+            {"signal_id": 4, "obj_path": "PV", "slave": 1, "function_code":"04", "address": 7, "name": "Cell Temperature in C", "data_type": "int16", "scale_factor": 0.1, "offset": 0, "physical_range": "-40 to +90 ºC", "data_range": "-400 to 900"}
         ]
     },
     {
         "device_id": 2,
         "signals": [
-            {"signal_id": 5, "slave": 226, "function_code":"04", "address": 775, "name": "Charge State", "data_type": "uint16", "scale_factor": 1, "physical_range": "0=Off;2=Fault;3=Bulk;4=Absorption;5=Float;6=Storage;7=Equalize;11=Other (Hub-1);252=External control", "data_range": "0 to 65535"},
-            {"signal_id": 6, "slave": 226, "function_code":"04", "address": 776, "name": "PV Voltaje",  "data_type": "uint16", "scale_factor": 100, "physical_range": "0 to 655.35 V", "data_range": "0 to 65535"},
-            {"signal_id": 7, "slave": 226, "function_code":"04", "address": 777, "name": "PV Current", "data_type": "int16", "scale_factor": 10, "physical_range": "-3276.8 A to 3276.7 A", "data_range": "-32768 to 32767"},
-            {"signal_id": 8, "slave": 226, "function_code":"04", "address": 789, "name": "PV power", "data_type": "uint16", "scale_factor": 10, "physical_range": "0 to 6553.5 W", "data_range": "0 to 65535"},
-            {"signal_id": 9, "slave": 226, "function_code":"04", "address": 789, "name": "PV user yield", "data_type": "uint16", "scale_factor": 10, "physical_range": "0 to 6553.5 kWh", "data_range": "0 to 65535"}
+            {"signal_id": 5, "obj_path": "solarcharger", "slave": 226, "function_code":"04", "address": 775, "name": "Charge State", "data_type": "uint16", "scale_factor": 1, "physical_range": "0=Off;2=Fault;3=Bulk;4=Absorption;5=Float;6=Storage;7=Equalize;11=Other (Hub-1);252=External control", "data_range": "0 to 65535"},
+            {"signal_id": 6, "obj_path": "PV", "slave": 226, "function_code":"04", "address": 776, "name": "PV Voltaje",  "data_type": "uint16", "scale_factor": 100, "physical_range": "0 to 655.35 V", "data_range": "0 to 65535"},
+            {"signal_id": 7, "obj_path": "PV", "slave": 226, "function_code":"04", "address": 777, "name": "PV Current", "data_type": "int16", "scale_factor": 10, "physical_range": "-3276.8 A to 3276.7 A", "data_range": "-32768 to 32767"},
+            {"signal_id": 8, "obj_path": "PV", "slave": 226, "function_code":"04", "address": 789, "name": "PV power", "data_type": "uint16", "scale_factor": 10, "physical_range": "0 to 6553.5 W", "data_range": "0 to 65535"},
+            {"signal_id": 9, "obj_path": "PV", "slave": 226, "function_code":"04", "address": 789, "name": "PV user yield", "data_type": "uint16", "scale_factor": 10, "physical_range": "0 to 6553.5 kWh", "data_range": "0 to 65535"}
         ]
     }
 ]

@@ -1,55 +1,57 @@
-import time
-import threading
+from time import time, sleep
+# app local
 import modbus_client
 
-def get_protocol_name(protocol_id, iot_protocols):
-    """ obj : a partir de un id retornar el nombre del protocolo   
-    protocol_id: int
-    iot_protocols : list of dics
-    recorrido por iot_protocols para leer el nombre del protocolo """
-    for protocol in iot_protocols:
-        if (protocol["protocol_id"] == protocol_id):
-            protocol_name = protocol["protocol_name"]
-            break
-    else:
-        protocol_name = "Unknown protocol"
-    return protocol_name
-
-def preprocess_configuration(iot_devices, iot_signals):
+def preprocess_configuration(iot_protocols, iot_devices, iot_signals):
     """ obj: Construye una estructura preprocesada para acceso rápido a los datos.
     parameters: 
+    iot_protocols : list
     iot_devices: list
     iot_signals: list
     return:
-    dict con la union de las dos listas """
-    data_devices = {}
+    device_data: dict con la union de las listas """
+    device_data = {}
 
     for device in iot_devices:
         device_id = device["device_id"]
+        protocol_id = device["protocol_id"]
+
         signals = next((m["signals"] for m in iot_signals if m["device_id"] == device_id), [])
-        data_devices[device_id] = {
+        protocol_name = next((m["protocol_name"] for m in iot_protocols if m["protocol_id"] == protocol_id), "Unknow")
+
+        device_data[device_id] = {
             "device": device,
             "signals": signals
         }
-    return data_devices
+        device_data[device_id]["device"]["protocol_name"] = protocol_name
+        device_data[device_id]["device"]["connection_status"] = "Unknow"
+    return device_data
 
-def host_data_collection(device_id, data_devices):
+def host_data_collection(device_id, device, signals):
     """Hilo de recolección de datos para un dispositivo específico."""
-    device_info = data_devices[device_id]
-    device = device_info["device"]
-    signals = device_info["signals"]
+    
+    protocol_id = device["protocol_id"]
     interval = device["interval"]
 
     while True:
         try:
-            match device["protocol_id"]:
+            match protocol_id:
                 case 0: #ModbusTcpClient
                     results = modbus_client.get_signals(device_id, device, signals)
                     print(f"Datos del dispositivo {device_id}: {results}")
                 case 1: #mqtt
                     pass
+                case 2: #dds
+                    pass
+                case _:
+                    timestamp = time()
+                    print(f"{timestamp}: Advertencia. Protocolo_id {device_id}: no encontrado")
         except Exception as e:
-            print(f"Error al leer datos del dispositivo {device_id}: {e}")
-        time.sleep(interval)
+            timestamp = time()
+            print(f"{timestamp}: Error general al leer datos del dispositivo {device_id}: {e}")
+        sleep(interval)
 
 
+def close_all_connections():
+    """Cierra todas las conexiones abiertas."""
+    modbus_client.close_all_connections()

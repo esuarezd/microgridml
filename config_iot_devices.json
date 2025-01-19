@@ -7,7 +7,6 @@
         "host": "192.168.2.4",
         "protocol_id": 0,
         "port": 502,
-        "connection_status":"Unknown",
         "interval": 60
     },
     {
@@ -18,7 +17,6 @@
         "host": "157.253.199.152",
         "protocol_id": 0,
         "port": 502,
-        "connection_status":"Unknown",
         "interval": 60
     },
     {
@@ -29,7 +27,6 @@
         "host": "157.253.200.176",
         "protocol_id": 0,
         "port": 502,
-        "connection_status":"Unknown",
         "interval": 60
     },
     {
@@ -40,7 +37,6 @@
         "host": "157.253.200.177",
         "protocol_id": 0,
         "port": 502,
-        "connection_status":"Unknown",
         "interval": 60
     }
 ]
