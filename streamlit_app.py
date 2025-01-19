@@ -1,14 +1,19 @@
 import streamlit as st
-import pandas as pd
-import data_collect
+import data_collector
+import utils
 
-# Cargar dispositivos IoT y protocolos
-iot_devices = data_collect.get_iot_devices()
-iot_mapping = data_collect.get_iot_mapping()
+# Cargar configuraciones
+iot_protocols = utils.load_json("config_iot_protocols.json")
+iot_devices = utils.load_json("config_iot_devices.json")
+iot_signals = utils.load_json("config_iot_signals.json")
 
-for i in range(len(iot_devices)):
-    if (iot_devices[i]["enabled"]):
-        data_collect.connect_device(iot_devices[i], iot_mapping[i]["mapping"])
+# agregamos llave protocol_name en iot_devices
+for device in iot_devices:
+    device['protocol_name'] = data_collector.get_protocol_name(device['protocol_id'], iot_protocols)
+
+# creacion de nuestr
+data_devices = data_collector.preprocess_configuration(iot_devices, iot_signals)
+
 
 # Configuración de la página
 st.set_page_config(
@@ -55,7 +60,7 @@ elif st.session_state["page"] == "Devices":
     with col3:
         st.markdown("**device_name**")
     with col4:
-        st.markdown("**ip_address**")
+        st.markdown("**host**")
     with col5:
         st.markdown("**protocol_name**")
     with col6:
@@ -73,14 +78,15 @@ elif st.session_state["page"] == "Devices":
         with col3:
             st.write(device["device_name"])
         with col4:
-            st.write(device["ip_address"])
+            st.write(device["host"])
         with col5:
-            st.write(device["protocol_name"])
+            protocol_name = data_collector.get_protocol_name(device['protocol_id'], iot_protocols)
+            st.write(protocol_name)
 
         # Mostrar el estado de la conexión
         with col6:
             status_color = (
-                "green" if  device["connection_status"] == "OK" else
+                "green" if  device["connection_status"] == "Good" else
                 "red" if device["connection_status"] == "Failure" else "gray"
             )
             st.markdown(

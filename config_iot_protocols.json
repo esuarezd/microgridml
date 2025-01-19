@@ -1,0 +1,10 @@
+[
+    {
+        "protocol_id": 0,
+        "protocol_name":"Modbus Tcp Client"
+    },
+    {
+        "protocol_id": 1,
+        "protocol_name":"Mqtt"
+    }
+]
