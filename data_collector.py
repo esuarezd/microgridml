@@ -1,6 +1,7 @@
-from time import time, sleep
+import time
 # app local
 import modbus_client
+import utils
 
 def preprocess_configuration(iot_protocols, iot_devices, iot_signals):
     """ obj: Construye una estructura preprocesada para acceso rápido a los datos.
@@ -44,12 +45,12 @@ def host_data_collection(device_id, device, signals):
                 case 2: #dds
                     pass
                 case _:
-                    timestamp = time()
+                    timestamp = utils.get_localtime()
                     print(f"{timestamp}: Advertencia. Protocolo_id {device_id}: no encontrado")
         except Exception as e:
-            timestamp = time()
+            timestamp = utils.get_localtime()
             print(f"{timestamp}: Error general al leer datos del dispositivo {device_id}: {e}")
-        sleep(interval)
+        time.sleep(interval)
 
 
 def close_all_connections():

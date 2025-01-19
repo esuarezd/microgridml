@@ -1,5 +1,7 @@
 from pymodbus.client import ModbusTcpClient
-from time import time
+# local
+import utils
+
 # Diccionario global para mantener conexiones persistentes
 connections = {}
 
@@ -13,7 +15,7 @@ def get_or_create_connection(device):
             client = ModbusTcpClient(host = host, port = port)
             if not client.connect():
                 device['connection_status'] = "Failure"
-                timestamp = time()
+                timestamp = utils.get_localtime()
                 print(f"{timestamp}: Advertencia. No se pudo conectar al equipo en {host}:{port}")
                 return None
             
@@ -21,7 +23,7 @@ def get_or_create_connection(device):
             connections[host] = client
         return connections[host]
     except Exception as e:
-        timestamp = time()
+        timestamp = utils.get_localtime()
         print(f"{timestamp}: Error al intentar conectar con {host}:{port}: {e}")
         return None
 
@@ -33,7 +35,7 @@ def get_signals(device_id, device, signals):
 
     if not client():
         device["connection_status"] = "Failure"
-        timestamp = time()
+        timestamp = utils.get_localtime()
         print(f"{timestamp}: Advertencia. No se pudo establecer la conexión para el dispositivo {device_id}") 
         return {}
 
@@ -45,13 +47,13 @@ def get_signals(device_id, device, signals):
             result = client.read_input_registers(address = address, slave = slave)
 
             if result.isError():
-                timestamp = time()
+                timestamp = utils.get_localtime()
                 print(f"{timestamp}: Advertencia. No se pudo leer la señal {signal.get('signal_id', 'signal_id no encontrado')} la dirección {address} con slave {slave} del dispositivo {device_id}")
             else:
                 value = result.registers[0]
                 results[signal["name"]] = value
         except Exception as e:
-            timestamp = time()
+            timestamp = utils.get_localtime()
             print(f"{timestamp}: Error al procesar la señal {signal.get('signal_id', 'signal_id no encontrado')} del dispositivo {device_id}: {e}")
     return results
 
