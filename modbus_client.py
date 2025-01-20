@@ -18,8 +18,9 @@ def get_or_create_connection(device):
                 print(f"{timestamp}: Advertencia. No se pudo conectar al equipo en {host}:{port}")
                 return None
             
-            device["connection_status"] = "Good"
             connections[host] = client
+        # fin if
+        device["connection_status"] = "Good"
         return connections[host]
     except Exception as e:
         timestamp = utils.get_localtime()
@@ -38,22 +39,23 @@ def get_signals(device_id, device, signals):
 
     results = {}
     for signal in signals:
-        try:
-            address = signal["address"]
-            slave = signal["slave"]
-            result = client.read_input_registers(address=address, slave=slave)
+        if not signal["enabled"]:
+            try:
+                address = signal["address"]
+                slave = signal["slave"]
+                result = client.read_input_registers(address=address, slave=slave)
 
-            if result.isError():
+                if result.isError():
+                    timestamp = utils.get_localtime()
+                    print(f"{timestamp}: Advertencia. No se pudo leer la señal {signal.get('signal_id', 'signal_id no encontrado')} en la dirección {address} con slave {slave} del dispositivo {device_id}")
+                    results[signal["name"]] = None  # Valor predeterminado en caso de error
+                else:
+                    value = result.registers[0] * signal.get("scale_factor", 1)
+                    results[signal["name"]] = value
+            except Exception as e:
                 timestamp = utils.get_localtime()
-                print(f"{timestamp}: Advertencia. No se pudo leer la señal {signal.get('signal_id', 'signal_id no encontrado')} en la dirección {address} con slave {slave} del dispositivo {device_id}")
-                results[signal["name"]] = None  # Valor predeterminado en caso de error
-            else:
-                value = result.registers[0] * signal.get("scale_factor", 1)
-                results[signal["name"]] = value
-        except Exception as e:
-            timestamp = utils.get_localtime()
-            print(f"{timestamp}: Error al procesar la señal {signal.get('signal_id', 'signal_id no encontrado')} del dispositivo {device_id}: {e}")
-            results[signal["name"]] = None  # Valor predeterminado en caso de excepción
+                print(f"{timestamp}: Error al procesar la señal {signal.get('signal_id', 'signal_id no encontrado')} del dispositivo {device_id}: {e}")
+                results[signal["name"]] = None  # Valor predeterminado en caso de excepción
     return results
 
 def close_all_connections():
