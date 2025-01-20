@@ -2,26 +2,26 @@
     {
         "device_id": 0,
         "signals": [
-            {"enabled": true, "signal_id": 0, "signal_type": 1, "obj_path": "PV", "slave": 1, "function_code":"04", "address": 0, "name": "Speed Wind in m/s", "data_type": "uint16", "scale_factor": 1, "offset": 0, "physical_range": "0 to 50 m/s", "data_range": "0 to 65535"},
-            {"enabled": true, "signal_id": 1, "signal_type": 1, "obj_path": "PV", "slave": 1, "function_code":"04", "address": 1, "name": "Ambiental Temperature", "data_type": "uint16", "scale_factor": 1, "offset": 0, "physical_range": "-40 to +90 ºC", "data_range": "0 to 65535"},
-            {"enabled": false, "signal_id": 2, "signal_type": 1, "obj_path": "PV", "slave": 1, "function_code":"04", "address": 2, "name": "Module Temperature in String 1", "data_type": "uint16", "scale_factor": 1, "offset": 0, "physical_range": "-40 to +90 ºC", "data_range": "0 to 65535"}
+            {"enabled": true, "signal_id": 0, "signal_type": 1, "obj_path": "PV", "slave": 1, "function_code":"04", "address": 0, "name": "Speed Wind in m/s", "data_type": "uint16", "scale_factor": 1, "offset": 0, "units":"m/s", "physical_range": "0 to 50 m/s", "data_range": "0 to 65535", "electrical_output": "4 to 20 mA", "sensor_type": "Vwind-420"},
+            {"enabled": true, "signal_id": 1, "signal_type": 1, "obj_path": "PV", "slave": 1, "function_code":"04", "address": 1, "name": "Ambiental Temperature", "data_type": "uint16", "scale_factor": 1, "offset": 0, "units":"C", "physical_range": "-40 to +90 ºC", "data_range": "0 to 65535", "electrical_output": "4 to 20 mA", "sensor_type": "Ta-I-4090"},
+            {"enabled": false, "signal_id": 2, "signal_type": 1, "obj_path": "PV", "slave": 1, "function_code":"04", "address": 2, "name": "Module Temperature in String 1", "data_type": "uint16", "scale_factor": 1, "offset": 0, "units":"C", "physical_range": "-40 to +90 ºC", "data_range": "0 to 65535", "electrical_output": "4 to 20 mA", "sensor_type": "Tm-I-4090"}
         ]
     },
     {
         "device_id": 1,
         "signals": [
-            {"enabled": false, "signal_id": 3, "signal_type": 1, "obj_path": "PV", "slave": 1, "function_code":"04", "address": 0, "name": "Cell Irradiance in W/m2", "data_type": "uint16", "scale_factor": 0.1, "offset": 0, "physical_range": "0 to 1500 W/m2", "data_range": "0 to 65535"},
-            {"enabled": true, "signal_id": 4, "signal_type": 1, "obj_path": "PV", "slave": 1, "function_code":"04", "address": 7, "name": "Cell Temperature in C", "data_type": "int16", "scale_factor": 0.1, "offset": 0, "physical_range": "-40 to +90 ºC", "data_range": "0 to 65535"}
+            {"enabled": false, "signal_id": 3, "signal_type": 1, "obj_path": "PV", "slave": 1, "function_code":"04", "address": 0, "name": "Cell Irradiance in W/m2", "data_type": "uint16", "scale_factor": 0.1, "offset": 0, "units":"W/m2", "physical_range": "0 to 1500 W/m2", "data_range": "0 to 65535", "electrical_output": "RS-485", "sensor_type": "Si-RS485TC-T-MB"},
+            {"enabled": true, "signal_id": 4, "signal_type": 1, "obj_path": "PV", "slave": 1, "function_code":"04", "address": 7, "name": "Cell Temperature in C", "data_type": "int16", "scale_factor": 0.1, "offset": 0, "units":"C", "physical_range": "-40 to +90 ºC", "data_range": "0 to 65535", "electrical_output": "RS-485", "sensor_type": "Si-RS485TC-T-MB"}
         ]
     },
     {
         "device_id": 2,
         "signals": [
-            {"enabled": true, "signal_id": 5, "signal_type": 0, "obj_path": "MPPT", "slave": 226, "function_code":"04", "address": 775, "name": "Charge State", "data_type": "uint16", "scale_factor": 1, "physical_range": "0=Off;2=Fault;3=Bulk;4=Absorption;5=Float;6=Storage;7=Equalize;11=Other (Hub-1);252=External control", "data_range": "0 to 65535"},
-            {"enabled": false, "signal_id": 6, "signal_type": 1, "obj_path": "PV", "slave": 226, "function_code":"04", "address": 776, "name": "PV Voltaje",  "data_type": "uint16", "scale_factor": 100, "physical_range": "0 to 655.35 V", "data_range": "0 to 65535"},
-            {"enabled": false, "signal_id": 7, "signal_type": 1, "obj_path": "PV", "slave": 226, "function_code":"04", "address": 777, "name": "PV Current", "data_type": "int16", "scale_factor": 10, "physical_range": "-3276.8 A to 3276.7 A", "data_range": "-32768 to 32767"},
-            {"enabled": false, "signal_id": 8, "signal_type": 1, "obj_path": "PV", "slave": 226, "function_code":"04", "address": 789, "name": "PV power", "data_type": "uint16", "scale_factor": 10, "physical_range": "0 to 6553.5 W", "data_range": "0 to 65535"},
-            {"enabled": false, "signal_id": 9, "signal_type": 1, "obj_path": "PV", "slave": 226, "function_code":"04", "address": 789, "name": "PV user yield", "data_type": "uint16", "scale_factor": 10, "physical_range": "0 to 6553.5 kWh", "data_range": "0 to 65535"}
+            {"enabled": true, "signal_id": 5, "signal_type": 0, "obj_path": "MPPT", "slave": 226, "function_code":"04", "address": 775, "name": "Charge State", "data_type": "uint16", "scale_factor": 1, "units":"", "physical_range": "0=Off;2=Fault;3=Bulk;4=Absorption;5=Float;6=Storage;7=Equalize;11=Other (Hub-1);252=External control", "data_range": "0 to 65535", "electrical_output": "CAN", "sensor_type": "MPPT-250/100"},
+            {"enabled": false, "signal_id": 6, "signal_type": 1, "obj_path": "PV", "slave": 226, "function_code":"04", "address": 776, "name": "PV Voltaje",  "data_type": "uint16", "scale_factor": 100, "units":"V", "physical_range": "0 to 655.35 V", "data_range": "0 to 65535", "electrical_output": "CAN", "sensor_type": "MPPT-250/100"},
+            {"enabled": false, "signal_id": 7, "signal_type": 1, "obj_path": "PV", "slave": 226, "function_code":"04", "address": 777, "name": "PV Current", "data_type": "int16", "scale_factor": 10, "units":"A", "physical_range": "-3276.8 A to 3276.7 A", "data_range": "-32768 to 32767", "electrical_output": "CAN", "sensor_type": "MPPT-250/100"},
+            {"enabled": false, "signal_id": 8, "signal_type": 1, "obj_path": "PV", "slave": 226, "function_code":"04", "address": 789, "name": "PV power", "data_type": "uint16", "scale_factor": 10, "units":"W", "physical_range": "0 to 6553.5 W", "data_range": "0 to 65535", "electrical_output": "CAN", "sensor_type": "MPPT-250/100"},
+            {"enabled": false, "signal_id": 9, "signal_type": 1, "obj_path": "PV", "slave": 226, "function_code":"04", "address": 789, "name": "PV user yield", "data_type": "uint16", "scale_factor": 10, "units":"kWh", "physical_range": "0 to 6553.5 kWh", "data_range": "0 to 65535", "electrical_output": "CAN", "sensor_type": "MPPT-250/100"}
         ]
     }
 ]

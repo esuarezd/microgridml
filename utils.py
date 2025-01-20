@@ -1,5 +1,5 @@
 import json
-import time
+from datetime import datetime
 
 def load_json(file_path):
     """Carga un archivo JSON con manejo de excepciones."""
@@ -13,10 +13,16 @@ def load_json(file_path):
         print(f"Error: El archivo {file_path} no tiene un formato JSON válido. Detalles: {e}")
         return None
 
-def get_localtime():
+def get_timestamp():
     """Devuelve la hora local en un formato legible con zona horaria."""
-    timestamp = time.localtime()
-    formatted_time = time.strftime("%Y-%m-%d %H:%M:%S %Z", timestamp)
+    timestamp = datetime.now().timestamp() # Ejemplo: 1672531199.123456
+
+    # Convertir el timestamp a un objeto datetime
+    dt = datetime.fromtimestamp(timestamp)
+
+    # Formatear con milisegundos
+    formatted_time = dt.strftime("%d/%m/%Y %H:%M:%S.%f")[:-3]  # .%f incluye microsegundos, [:3] deja milisegundos
+
     return formatted_time
 
 def create_realtime(iot_signals):
