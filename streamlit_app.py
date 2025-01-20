@@ -12,7 +12,7 @@ iot_signals = utils.load_json("config_iot_signals.json")
 
 # preprocesar configuraciones
 device_data = data_collector.preprocess_configuration(iot_devices, iot_protocols, iot_signals)
-
+#realtime_data = utils.create_realtime(iot_signals)
 # Iniciar hilos de recolección de datos para dispositivos habilitados
 for device_id, device_info in device_data.items():
     if device_info["device"]["enabled"]:

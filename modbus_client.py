@@ -50,7 +50,7 @@ def get_signals(device_id, device, signals):
                     print(f"{timestamp}: Advertencia. No se pudo leer la señal {signal.get('signal_id', 'signal_id no encontrado')} en la dirección {address} con slave {slave} del dispositivo {device_id}")
                     results[signal["name"]] = None  # Valor predeterminado en caso de error
                 else:
-                    value = result.registers[0] * signal.get("scale_factor", 1)
+                    value = result.registers[0]
                     results[signal["name"]] = value
         except Exception as e:
             timestamp = utils.get_localtime()
