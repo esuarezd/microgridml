@@ -56,7 +56,7 @@ elif st.session_state["page"] == "History":
 
 elif st.session_state["page"] == "Devices":
     st.title("Microgrid ML")
-    st.subheader("Estado comunicación de los Dispositivos IoT")
+    st.write("Estado comunicación de los Dispositivos IoT. version 19-Ene 8:43 pm")
 
     # Construir DataFrame para dispositivos
 
