@@ -24,17 +24,3 @@ def get_timestamp():
     formatted_time = dt.strftime("%d/%m/%Y %H:%M:%S.%f")[:-3]  # .%f incluye microsegundos, [:3] deja milisegundos
 
     return formatted_time
-
-def create_realtime(iot_signals):
-    realtime_data = {}
-
-    for signal in iot_signals:
-        signal_id = signal["signal_id"]
-        
-        realtime_data[signal_id] = {
-            "device": {**device, "protocol_name": protocol_name, "connection_status": "Unknown"},
-            "signals": {
-                "signal_id": 3, "signal_type": 1, "obj_path": "PV", "slave": 1, "function_code":"04", "address": 0, "name": "Cell Irradiance in W/m2", "data_type": "uint16", "scale_factor": 0.1, "offset": 0, "physical_range": "0 to 1500 W/m2", "data_range": "0 to 65535"
-            }
-        }
-    return realtime_data

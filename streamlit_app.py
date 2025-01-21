@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 import threading
+import logging
 # app local
 import data_collector
 import utils
@@ -11,17 +12,18 @@ iot_protocols = utils.load_json("config_iot_protocols.json")
 iot_signals = utils.load_json("config_iot_signals.json")
 
 # preprocesar configuraciones
-device_data = data_collector.preprocess_configuration(iot_devices, iot_protocols, iot_signals)
-realtime_data = {}
+device_data = data_collector.preprocess_configuration_devices(iot_devices, iot_protocols, iot_signals)
+realtime_data = data_collector.preprocess_configuration_signals(iot_devices, iot_signals)
 # Iniciar hilos de recolección de datos para dispositivos habilitados
 for device_id, device_info in device_data.items():
     if device_info["device"]["enabled"]:
         thread = threading.Thread(
             target=data_collector.host_data_collection,
-            args=(device_id, device_info["device"], device_info["signals"]),
+            args=(device_id, device_info["device"], device_info["signals"], realtime_data),
             daemon=True
         )
         thread.start()
+        logging.info(f"Hilo iniciado para el dispositivo {device_id}: {device_info['device']['device_name']}")
 
 # Configuración de la página
 st.set_page_config(
@@ -39,6 +41,9 @@ if "page" not in st.session_state:
 if st.sidebar.button("Home"):
     st.session_state["page"] = "Home"
 
+if st.sidebar.button("Realtime"):
+    st.session_state["page"] = "Realtime"
+
 if st.sidebar.button("History"):
     st.session_state["page"] = "History"
 
@@ -50,6 +55,30 @@ if st.session_state["page"] == "Home":
     st.title("Microgrid ML")
     st.write("Sistema IoT en ejecución.")
 
+if st.session_state["page"] == "Realtime":
+    st.title("Microgrid ML")
+    st.write("Datos de tiempo real. version 21-Ene 1:00 am")
+    # Construir DataFrame para dispositivos
+    signals_list = [
+        {
+            "signal_id": signal_info["signal_id"],
+            "obj_path": signal_info["obj_path"],
+            "signal_name": signal_info["signal_name"],
+            "signal_type": signal_info["signal_type"],  
+            "value": signal_info["value"],
+            "unit": signal_info["unit"],
+            "timestamp": signal_info["timestamp"],
+        }
+        for signal_info in realtime_data.values()
+    ]
+    df_rt = pd.DataFrame(signals_list)
+    if df_rt.empty:
+        st.write("No hay datos en tiempo real disponibles.")
+    else:
+        df_rt["timestamp"] = pd.to_datetime(df_rt["timestamp"], unit="s")
+        df_rt["timestamp"] = df_rt["timestamp"].dt.strftime("%Y-%m-%d %H:%M:%S")  # Compactar el formato
+        st.dataframe(df_rt)
+
 elif st.session_state["page"] == "History":
     st.title("Microgrid ML")
     st.write("Historial de lecturas de señales (en desarrollo).")
@@ -59,8 +88,6 @@ elif st.session_state["page"] == "Devices":
     st.write("Estado comunicación de los Dispositivos IoT. version 19-Ene 8:43 pm")
 
     # Construir DataFrame para dispositivos
-
-
     device_list = [
         {
             "enabled": device_info["device"]["enabled"],
@@ -72,10 +99,11 @@ elif st.session_state["page"] == "Devices":
         }
         for device_info in device_data.values()
     ]
-    df = pd.DataFrame(device_list)
-
-    # Mostrar la tabla de dispositivos
-    st.dataframe(df)
+    df_devices = pd.DataFrame(device_list)
+    if df_devices.empty:
+        st.write("No hay dispositivos configurados.")
+    else:
+        st.dataframe(df_devices)
 
 # Manejo de cierre de conexiones
 #st.sidebar.button("Cerrar conexiones", on_click=data_collector.close_all_connections)

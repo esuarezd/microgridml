@@ -1,10 +1,10 @@
 [
-    {
+    { 
         "device_id": 0,
         "device_name":"adam6017",
         "description":"IoT device for PV measurements",
         "enabled": true,
-        "host": "157.253.199.199",
+        "host": "192.168.2.4",
         "protocol_id": 0,
         "port": 502,
         "interval": 60
