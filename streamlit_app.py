@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 import threading
 import logging
+import time
 # app local
 import data_collector
 import utils
@@ -59,25 +60,28 @@ if st.session_state["page"] == "Realtime":
     st.title("Microgrid ML")
     st.write("Datos de tiempo real. version 21-Ene 1:00 am")
     # Construir DataFrame para dispositivos
-    signals_list = [
-        {
-            "signal_id": signal_info["signal_id"],
-            "obj_path": signal_info["obj_path"],
-            "signal_name": signal_info["signal_name"],
-            "signal_type": signal_info["signal_type"],  
-            "value": signal_info["value"],
-            "unit": signal_info["unit"],
-            "timestamp": signal_info["timestamp"],
-        }
-        for signal_info in realtime_data.values()
-    ]
-    df_rt = pd.DataFrame(signals_list)
-    if df_rt.empty:
-        st.write("No hay datos en tiempo real disponibles.")
-    else:
-        df_rt["timestamp"] = pd.to_datetime(df_rt["timestamp"], unit="s")
-        df_rt["timestamp"] = df_rt["timestamp"].dt.strftime("%Y-%m-%d %H:%M:%S")  # Compactar el formato
-        st.dataframe(df_rt)
+    placeholder = st.empty()
+
+    while True:
+        signals_list = [
+            {
+                "signal_id": signal_info["signal_id"],
+                "obj_path": signal_info["obj_path"],
+                "signal_name": signal_info["signal_name"],
+                "signal_type": signal_info["signal_type"],
+                "value": signal_info["value"],
+                "unit": signal_info["unit"],
+                "timestamp": signal_info["timestamp"],
+            }
+            for signal_info in realtime_data.values()
+        ]
+        df_rt = pd.DataFrame(signals_list)
+        if not df_rt.empty:
+            df_rt["timestamp"] = pd.to_datetime(df_rt["timestamp"], unit="s").dt.strftime("%Y-%m-%d %H:%M:%S")
+
+        placeholder.dataframe(df_rt)
+        time.sleep(60)  # Actualiza cada segundodf_rt["timestamp"].dt.strftime("%Y-%m-%d %H:%M:%S")  # Compactar el formato
+
 
 elif st.session_state["page"] == "History":
     st.title("Microgrid ML")
