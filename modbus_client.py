@@ -48,25 +48,28 @@ def get_signals(device_id, device, signals):
     results = {}
     for signal in signals:
         try:
-            if signal["enabled"]:
-                address = signal["address"]
-                slave = signal["slave"]
+            if signal['enabled']:
+                address = signal['address']
+                slave = signal['slave_id']
                 result = client.read_input_registers(address=address, slave=slave)
                 if result.isError():
                     logging.warning(f"No se pudo leer la señal {signal.get('signal_id', 'signal_id no encontrado')} en la dirección {address} con slave {slave} del dispositivo {device_id}")
                     results[signal["signal_id"]] = None  # Valor predeterminado en caso de error
                 else:
-                    signal_id = signal["signal_id"]
+                    signal_id = signal['signal_id']
                     scale_factor = signal.get('scale_factor', 1)
                     offset = signal.get('offset', 0)
-                    value = (offset + result.registers[0] / scale_factor ) if result.registers else None
-                    data_modbus = {
+                    if result.registers:
+                        value = (offset + result.registers[0] / scale_factor )
+                        modbus_data = {
                         'value': value,
                         'timestamp': datetime.now().timestamp(),
                         'quality': 1,
                         'source': 1
-                    }
-                    results[signal_id] = data_modbus                    
+                        }
+                    else:
+                        modbus_data = {}
+                    results[signal_id] = modbus_data                    
         except Exception as e:
             logging.error(f"Error al procesar la señal {signal.get('signal_id', 'signal_id no encontrado')} del dispositivo {device_id}: {e}")
             results[signal["signal_id"]] = None  # Valor predeterminado en caso de excepción
