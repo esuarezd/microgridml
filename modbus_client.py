@@ -57,7 +57,9 @@ def get_signals(device_id, device, signals):
                     results[signal["signal_id"]] = None  # Valor predeterminado en caso de error
                 else:
                     signal_id = signal["signal_id"]
-                    value = result.registers[0] if result.registers else None
+                    scale_factor = signal.get('scale_factor', 1)
+                    offset = signal.get('offset', 0)
+                    value = (offset + result.registers[0] / scale_factor ) if result.registers else None
                     data_modbus = {
                         'value': value,
                         'timestamp': datetime.now().timestamp(),

@@ -83,9 +83,10 @@ def host_data_collection(device_id, device, signals, realtime_data):
 def update_realtime_data(results, realtime_data):
     for signal_id, result_info in results.items():
         if signal_id in realtime_data:
-            realtime_data[signal_id]['value'] = result_info['value']
-            realtime_data[signal_id]['timestamp'] = result_info['timestamp']
-            realtime_data[signal_id]['quality'] = result_info['quality']
-            realtime_data[signal_id]['source'] = result_info['source']
+            sensor = realtime_data[signal_id]
+            sensor['value'] = result_info['value'] 
+            sensor['timestamp'] = result_info['timestamp']
+            sensor['quality'] = result_info['quality']
+            sensor['source'] = result_info['source']
         else:
             logging.warning(f"Signal ID {signal_id} not found in realtime_data.")

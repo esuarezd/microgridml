@@ -23,7 +23,7 @@
         "device_id": 2,
         "device_name":"cerbogx",
         "description":"IoT device Victron System",
-        "enabled": false,
+        "enabled": true,
         "host": "157.253.200.176",
         "protocol_id": 0,
         "port": 502,
