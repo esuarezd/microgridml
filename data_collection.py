@@ -1,3 +1,4 @@
+import multiprocessing
 import time
 import modbus_client
 import logging
@@ -53,7 +54,7 @@ def preprocess_configuration_signals(iot_devices, iot_signals):
     logging.info(f"Signals data preprocessed: {signals_data}")
     return signals_data
 
-def host_data_collection(device_id, device, signals, realtime_data):
+def host_data_collection(device_id, device, signals, shared_realtime_data):
     """Hilo de recolección de datos para un dispositivo específico.""" 
     protocol_id = device["protocol_id"]
     interval = device["interval"]
@@ -64,7 +65,7 @@ def host_data_collection(device_id, device, signals, realtime_data):
                 case 0:  # ModbusTcpClient
                     results = modbus_client.get_signals(device_id, device, signals)
                     logging.info(f"Device {device_id} data collected: {results}")
-                    update_realtime_data(results, realtime_data)
+                    update_realtime_data(results, shared_realtime_data)
                 case 1:  # mqtt
                     pass
                 case 2:  # dds
@@ -80,13 +81,47 @@ def host_data_collection(device_id, device, signals, realtime_data):
             time.sleep(interval)
 
 
-def update_realtime_data(results, realtime_data):
+def update_realtime_data(results, shared_realtime_data):
     for signal_id, result_info in results.items():
-        if signal_id in realtime_data:
-            sensor = realtime_data[signal_id]
+        if signal_id in shared_realtime_data:
+            sensor = shared_realtime_data[signal_id]
             sensor['value'] = result_info['value'] 
             sensor['timestamp'] = result_info['timestamp']
             sensor['quality'] = result_info['quality']
             sensor['source'] = result_info['source']
         else:
             logging.warning(f"Signal ID {signal_id} not found in realtime_data.")
+
+
+def start_data_collection(shared_realtime_data):
+    """Inicia la recolección de datos."""
+    # Cargar configuraciones
+    iot_devices = utils.load_json("config_iot_devices.json")
+    iot_protocols = utils.load_json("config_iot_protocols.json")
+    iot_signals = utils.load_json("config_iot_signals.json")
+
+    # preprocesar configuraciones
+    #device_data = data_collector.preprocess_configuration_devices(iot_devices, iot_protocols, iot_signals)
+    #realtime_data = data_collector.preprocess_configuration_signals(iot_devices, iot_signals)
+    # Iniciar hilos de recolección de datos para dispositivos habilitados
+    
+    for device in iot_devices:
+        if device["enabled"]:
+            multiprocessing.Process(
+                target=host_data_collection,
+                args=(device["device_id"], device, iot_signals, shared_realtime_data),
+                daemon=True
+            ).start()
+            logging.info(f"Proceso iniciado para el dispositivo {device['device_id']}: {device['device_name']}")
+
+if __name__ == "__main__":
+    manager = multiprocessing.Manager()
+    realtime_data = manager.dict()
+
+    # Iniciar la recolección de datos
+    start_data_collection(realtime_data)
+
+    # Mantener el backend activo
+    print("Backend ejecutándose...")
+    while True:
+        time.sleep(1)
