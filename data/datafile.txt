@@ -1,1 +1,2 @@
 datafile
+aqui van los archivos de configuracion de los equipos

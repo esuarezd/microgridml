@@ -36,8 +36,9 @@ def get_or_create_connection(device):
         logging.error(f"Error al intentar conectar con {host}:{port}: {e}")
         return None
 
-def get_signals(device_id, device, signals):
+def get_signals(device, iot_signals):
     """Lee las señales de un dispositivo Modbus."""
+    device_id = device["device_id"]
     client = get_or_create_connection(device)
 
     if not client or not client.is_socket_open():
@@ -46,7 +47,7 @@ def get_signals(device_id, device, signals):
         return {}
 
     results = {}
-    for signal in signals:
+    for signal in iot_signals:
         try:
             if signal['enabled']:
                 address = signal['address']
@@ -60,9 +61,11 @@ def get_signals(device_id, device, signals):
                     scale_factor = signal.get('scale_factor', 1)
                     offset = signal.get('offset', 0)
                     if result.registers:
-                        value = (offset + result.registers[0] / scale_factor )
+                        value_protocol = result.registers[0]
+                        value_processed = (offset + value_protocol / scale_factor )
                         modbus_data = {
-                        'value': value,
+                        'value': value_processed,
+                        'value_protocol': value_protocol,
                         'timestamp': datetime.now().timestamp(),
                         'quality': 1,
                         'source': 1
