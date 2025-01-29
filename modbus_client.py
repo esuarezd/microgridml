@@ -36,7 +36,7 @@ def get_or_create_connection(device):
         logging.error(f"Error al intentar conectar con {host}:{port}: {e}")
         return None
 
-def get_signals(device, iot_signals):
+def get_signals(device, device_signals):
     """Lee las señales de un dispositivo Modbus."""
     device_id = device["device_id"]
     client = get_or_create_connection(device)
@@ -46,8 +46,8 @@ def get_signals(device, iot_signals):
         logging.warning(f"No se pudo establecer la conexión para el dispositivo {device_id}")
         return {}
 
-    results = {}
-    for signal in iot_signals:
+    results = dict()
+    for signal in device_signals:
         try:
             if signal['enabled']:
                 address = signal['address']
@@ -72,7 +72,7 @@ def get_signals(device, iot_signals):
                         }
                     else:
                         modbus_data = {}
-                    results[signal_id] = modbus_data                    
+                    results[signal_id] = modbus_data
         except Exception as e:
             logging.error(f"Error al procesar la señal {signal.get('signal_id', 'signal_id no encontrado')} del dispositivo {device_id}: {e}")
             results[signal["signal_id"]] = None  # Valor predeterminado en caso de excepción

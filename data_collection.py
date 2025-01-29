@@ -45,13 +45,13 @@ def preprocess_configuration_signals(iot_signals, obj_path_id, obj_path_name):
     signals_data = list()
 
     for iot_signal in iot_signals:
-        signals = iot_signal["signals"]
-        for signal in signals:
+        device_signals = iot_signal["device_signals"]
+        for signal in device_signals:
             if signal["obj_path_id"] == obj_path_id:
 
                 signals_data.append( 
                     { 
-                    **signal, 
+                    **device_signals, 
                     "obj_path_name": obj_path_name,
                     "value": "Unknown",
                     "quality": 0,
@@ -62,7 +62,18 @@ def preprocess_configuration_signals(iot_signals, obj_path_id, obj_path_name):
     logging.info(f"Signals data preprocessed: {signals_data}")
     return signals_data
 
-def update_realtime_data(results, shared_realtime_data):
+def update_realtime_data(results, device_signals, shared_realtime_data):
+    for signal_id, result_info in results.items():
+        group_id = device_signals.get("group_id")  # Identifica el grupo (e.g., "PV", "Storage", "Loads")
+        if signal_group in shared_realtime_data:
+            shared_realtime_data[signal_group][signal_id] = {
+                "device_id": device_id,
+                "signal_name": iot_signals[signal_id]["signal_name"],
+                "value": result_info["value"],
+                "timestamp": result_info["timestamp"],
+                "quality": result_info["quality"],
+            }
+    
     for signal_id, result_info in results.items():
         if signal_id in shared_realtime_data:
             sensor = shared_realtime_data[signal_id]
@@ -73,7 +84,7 @@ def update_realtime_data(results, shared_realtime_data):
         else:
             logging.warning(f"Signal ID {signal_id} not found in realtime_data.")
 
-def host_data_collection(device, iot_signals, shared_realtime_data):
+def host_data_collection(device, device_signals, shared_realtime_data):
     """Hilo de recolección de datos para un dispositivo específico.""" 
     device_id = device["device_id"]
     protocol_id = device["protocol_id"]
@@ -83,7 +94,7 @@ def host_data_collection(device, iot_signals, shared_realtime_data):
         try:
             match protocol_id:
                 case 0:  # ModbusTcpClient
-                    results = modbus_client.get_signals(device, iot_signals)
+                    results = modbus_client.get_signals(device, device_signals)
                     logging.info(f"Device {device_id} protocol {protocol_id} data collected: {results}")
                     update_realtime_data(results, shared_realtime_data)
                 case 1:  # mqtt
@@ -119,23 +130,25 @@ def start_data_collection(shared_realtime_data):
     iot_devices = load_json("data/config_iot_devices.json")
     iot_protocols = load_json("data/config_iot_protocols.json")
     iot_signals = load_json("data/config_iot_signals.json")
-    obj_paths = load_json("data/config_obj_paths.json")
+    signals_group = load_json("data/config_signals_group.json")
 
     # preprocesar configuraciones
-    for obj_path in obj_paths:
-        obj_path_id = obj_path["obj_path_id"]
-        obj_path_name = obj_path["obj_path_name"]
-        if obj_path_id == 0:
-            shared_realtime_data[obj_path_id] = preprocess_configuration_devices(iot_devices, iot_protocols, obj_path_name)
+    for group in signals_group:
+        group_id = group["group_id"]
+        group_name = group["group_name"]
+        if group_id == 0:
+            shared_realtime_data[group_id] = preprocess_configuration_devices(iot_devices, iot_protocols, obj_path_name)
         else:
-            shared_realtime_data[obj_path_id] = preprocess_configuration_signals(iot_signals, obj_path_id, obj_path_name)
+            shared_realtime_data[group_id] = preprocess_configuration_signals(iot_signals, obj_path_id, obj_path_name)
     # Iniciar hilos de recolección de datos para dispositivos habilitados
     
     for device in iot_devices:
         if device["enabled"]:
+            device_signals = next((m["device_signals"] for m in iot_signals if m["device_id"] == device["device_id"]), "Unknown")
+
             multiprocessing.Process(
                 target=host_data_collection,
-                args=(device, iot_signals, shared_realtime_data),
+                args=(device, device_signals, shared_realtime_data),
                 daemon=True
             ).start()
             logging.info(f"Proceso iniciado para el dispositivo {device['device_id']}: {device['device_name']}")
