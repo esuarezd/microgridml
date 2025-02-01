@@ -16,7 +16,7 @@ logging.basicConfig(
 
 
     
-def preprocess_configuration_devices(iot_devices, iot_protocols, obj_path_name):
+def preprocess_configuration_devices(iot_devices, iot_protocols, group_name):
     """Construye una estructura preprocesada para acceso rápido a los datos."""
     device_data = list()
 
@@ -29,9 +29,8 @@ def preprocess_configuration_devices(iot_devices, iot_protocols, obj_path_name):
             { 
             **device, 
             "protocol_name": protocol_name, 
-            "obj_path_name": obj_path_name,
-            "path1": device["device_name"],
-            "value": "Unknown",
+            "group_name": group_name,
+            "value": 0,
             "quality": 0,
             "source": 0,
             "timestamp": 0
@@ -40,20 +39,20 @@ def preprocess_configuration_devices(iot_devices, iot_protocols, obj_path_name):
     logging.info(f"Device data preprocessed: {device_data}")
     return device_data
 
-def preprocess_configuration_signals(iot_signals, obj_path_id, obj_path_name):
+def preprocess_configuration_signals(iot_signals, group_id, group_name):
     """Construye una estructura preprocesada para acceso rápido a los datos."""
     signals_data = list()
 
     for iot_signal in iot_signals:
         device_signals = iot_signal["device_signals"]
         for signal in device_signals:
-            if signal["obj_path_id"] == obj_path_id:
+            if signal["group_id"] == group_id:
 
                 signals_data.append( 
                     { 
-                    **device_signals, 
-                    "obj_path_name": obj_path_name,
-                    "value": "Unknown",
+                    **signal, 
+                    "group_name": group_name,
+                    "value": 0,
                     "quality": 0,
                     "source": 0,
                     "timestamp": 0
@@ -62,52 +61,66 @@ def preprocess_configuration_signals(iot_signals, obj_path_id, obj_path_name):
     logging.info(f"Signals data preprocessed: {signals_data}")
     return signals_data
 
-def update_realtime_data(results, device_signals, shared_realtime_data):
-    for signal_id, result_info in results.items():
-        group_id = device_signals.get("group_id")  # Identifica el grupo (e.g., "PV", "Storage", "Loads")
-        if signal_group in shared_realtime_data:
-            shared_realtime_data[signal_group][signal_id] = {
-                "device_id": device_id,
-                "signal_name": iot_signals[signal_id]["signal_name"],
-                "value": result_info["value"],
-                "timestamp": result_info["timestamp"],
-                "quality": result_info["quality"],
-            }
-    
-    for signal_id, result_info in results.items():
-        if signal_id in shared_realtime_data:
-            sensor = shared_realtime_data[signal_id]
-            sensor['value'] = result_info['value'] 
-            sensor['timestamp'] = result_info['timestamp']
-            sensor['quality'] = result_info['quality']
-            sensor['source'] = result_info['source']
+def update_realtime_data(results, signal_index):
+    """actualizar datos leidos
+
+    Args:
+        results (list): lista de datos leidos de un equipo
+        signal_index (dict): _description_
+    """
+    for result in results:
+        signal_id = result.get('signal_id')
+        if signal_id in signal_index:
+            signal_index[signal_id].update({
+                'value': result.get('value', 0),
+                'value_protocol': result.get('value_protocol', 0),
+                'timestamp': result.get('timestamp', 0),
+                'quality': result.get('quality', 0),
+                'source': result.get('source', 0)
+            })
         else:
-            logging.warning(f"Signal ID {signal_id} not found in realtime_data.")
+            logging.warning(f"Signal ID {signal_id} not found in indexed data.")
+ 
+    
 
 def host_data_collection(device, device_signals, shared_realtime_data):
-    """Hilo de recolección de datos para un dispositivo específico.""" 
+    """Hilo de recolección de datos para un dispositivo específico.
+
+    Args:
+        device (dict): diccionario con los datos del equipo
+        device_signals (dict): diccionario con las señales que se leen del equipo
+        shared_realtime_data (dic): dicctionario con los datos de tiempo real del sistema
+    """
     device_id = device["device_id"]
     protocol_id = device["protocol_id"]
     interval = device["interval"]
 
+    # Crear el índice de señales una sola vez
+    signal_index = {signal['signal_id']: signal for signal in device_signals}
+
+
     while True:
         try:
-            match protocol_id:
-                case 0:  # ModbusTcpClient
-                    results = modbus_client.get_signals(device, device_signals)
-                    logging.info(f"Device {device_id} protocol {protocol_id} data collected: {results}")
-                    update_realtime_data(results, shared_realtime_data)
-                case 1:  # mqtt
-                    pass
-                case 2:  # dds
-                    pass
-                case _:
-                    logging.warning(f"Unknown protocol_id {device_id}")
+            if protocol_id == 0:  # ModbusTcpClient
+                results = modbus_client.get_signals(device, device_signals)
+                logging.info(f"Device {device_id} (protocol {protocol_id}) data collected: {results}")
+                # Crear un índice directo para signal_id
+                
+                update_realtime_data(results, signal_index)
+            elif protocol_id == 1:  # MQTT
+                pass  # Implementación futura para MQTT
+            elif protocol_id == 2:  # DDS
+                pass  # Implementación futura para DDS
+            else:
+                logging.warning(f"Unknown protocol_id {protocol_id} for device {device_id}")
+
         except ConnectionError as ce:
             logging.error(f"Connection lost for device {device_id}: {ce}")
             device["connection_status"] = "Disconnected"
+
         except Exception as e:
             logging.error(f"Unexpected error for device {device_id}: {e}")
+
         finally:
             time.sleep(interval)
 
@@ -137,9 +150,9 @@ def start_data_collection(shared_realtime_data):
         group_id = group["group_id"]
         group_name = group["group_name"]
         if group_id == 0:
-            shared_realtime_data[group_id] = preprocess_configuration_devices(iot_devices, iot_protocols, obj_path_name)
+            shared_realtime_data[group_id] = preprocess_configuration_devices(iot_devices, iot_protocols, group_name)
         else:
-            shared_realtime_data[group_id] = preprocess_configuration_signals(iot_signals, obj_path_id, obj_path_name)
+            shared_realtime_data[group_id] = preprocess_configuration_signals(iot_signals, group_id, group_name)
     # Iniciar hilos de recolección de datos para dispositivos habilitados
     
     for device in iot_devices:
