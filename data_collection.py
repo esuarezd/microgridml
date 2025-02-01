@@ -1,8 +1,16 @@
 import multiprocessing
 import json
 import time
-import modbus_client
 import logging
+import os
+from multiprocessing.managers import BaseManager
+
+#local
+import modbus_client
+
+# Verificar si la carpeta 'logs' existe, si no, crearla
+if not os.path.exists('logs'):
+    os.makedirs('logs')
 
 # Configurar el sistema de logging
 logging.basicConfig(
@@ -10,7 +18,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",  # Formato del mensaje
     handlers=[
         logging.StreamHandler(),  # Mostrar en la terminal
-        logging.FileHandler("data_collector.log", mode="a")  # Registrar en un archivo
+        logging.FileHandler("logs/data_collector.log", mode="a")  # Registrar en un archivo
     ]
 )
 
@@ -30,7 +38,7 @@ def preprocess_configuration_devices(iot_devices, iot_protocols, group_name):
             **device, 
             "protocol_name": protocol_name, 
             "group_name": group_name,
-            "value": 0,
+            "value": None,
             "quality": 0,
             "source": 0,
             "timestamp": 0
@@ -61,29 +69,45 @@ def preprocess_configuration_signals(iot_signals, group_id, group_name):
     logging.info(f"Signals data preprocessed: {signals_data}")
     return signals_data
 
-def update_realtime_data(results, signal_index):
-    """actualizar datos leidos
+def update_realtime_data(connection_status, results, signals_group, realtime_device_index, realtime_signal_index):
+    """Actualiza datos leídos y el estado de conexión del dispositivo.
 
     Args:
-        results (list): lista de datos leidos de un equipo
-        signal_index (dict): _description_
+        results (list): Datos que se leen del equipo.
+        shared_realtime_data (dict): Datos en tiempo real.
+        group_id (int): ID del grupo para las señales.
+        device_status (dict, opcional): Estado de conexión del dispositivo.
     """
-    for result in results:
-        signal_id = result.get('signal_id')
-        if signal_id in signal_index:
-            signal_index[signal_id].update({
-                'value': result.get('value', 0),
-                'value_protocol': result.get('value_protocol', 0),
-                'timestamp': result.get('timestamp', 0),
-                'quality': result.get('quality', 0),
-                'source': result.get('source', 0)
-            })
+    for group in signals_group:
+        group_id = group["group_id"]
+        if group_id == 0:
+            device_id = connection_status.get('device_id')
+            if device_id in realtime_device_index:
+                realtime_device_index[device_id].update(
+                    {
+                        'value':connection_status.get('value', None),
+                        'timestamp':connection_status.get('timestamp', 0),
+                        'source':connection_status.get('source',0),
+                        'quality':connection_status.get('source',0)
+                    }
+                )
         else:
-            logging.warning(f"Signal ID {signal_id} not found in indexed data.")
- 
+            for result in results:
+                signal_id = result.get('signal_id')
+                if signal_id in realtime_signal_index:
+                    realtime_signal_index[signal_id].update({
+                        'value': result.get('value', 0),
+                        'value_protocol': result.get('value_protocol', 0),
+                        'timestamp': result.get('timestamp', 0),
+                        'quality': result.get('quality', 0),
+                        'source': result.get('source', 0)
+                    })
+                else:
+                    logging.warning(f"Signal ID {signal_id} not found in indexed data.")
+    
     
 
-def host_data_collection(device, device_signals, shared_realtime_data):
+def host_data_collection(device, device_signals, signals_group, realtime_device_index, realtime_signal_index):
     """Hilo de recolección de datos para un dispositivo específico.
 
     Args:
@@ -94,19 +118,12 @@ def host_data_collection(device, device_signals, shared_realtime_data):
     device_id = device["device_id"]
     protocol_id = device["protocol_id"]
     interval = device["interval"]
-
-    # Crear el índice de señales una sola vez
-    signal_index = {signal['signal_id']: signal for signal in device_signals}
-
-
     while True:
         try:
             if protocol_id == 0:  # ModbusTcpClient
-                results = modbus_client.get_signals(device, device_signals)
+                connection_status, results = modbus_client.get_signals(device, device_signals)
                 logging.info(f"Device {device_id} (protocol {protocol_id}) data collected: {results}")
-                # Crear un índice directo para signal_id
-                
-                update_realtime_data(results, signal_index)
+                update_realtime_data(connection_status, results, signals_group, realtime_device_index, realtime_signal_index)
             elif protocol_id == 1:  # MQTT
                 pass  # Implementación futura para MQTT
             elif protocol_id == 2:  # DDS
@@ -116,7 +133,7 @@ def host_data_collection(device, device_signals, shared_realtime_data):
 
         except ConnectionError as ce:
             logging.error(f"Connection lost for device {device_id}: {ce}")
-            device["connection_status"] = "Disconnected"
+            device.update({"value":"Disconnected"})
 
         except Exception as e:
             logging.error(f"Unexpected error for device {device_id}: {e}")
@@ -151,8 +168,13 @@ def start_data_collection(shared_realtime_data):
         group_name = group["group_name"]
         if group_id == 0:
             shared_realtime_data[group_id] = preprocess_configuration_devices(iot_devices, iot_protocols, group_name)
+            realtime_device_index = {device['device_id']: device for device in shared_realtime_data[group_id]}
+            logging.info(f"Device data realtime: {realtime_device_index}")
         else:
             shared_realtime_data[group_id] = preprocess_configuration_signals(iot_signals, group_id, group_name)
+            realtime_signal_index = {signal['signal_id']: signal for signal in shared_realtime_data[group_id]}
+            logging.info(f"Signals data realtime: {realtime_signal_index}")
+
     # Iniciar hilos de recolección de datos para dispositivos habilitados
     
     for device in iot_devices:
@@ -161,14 +183,27 @@ def start_data_collection(shared_realtime_data):
 
             multiprocessing.Process(
                 target=host_data_collection,
-                args=(device, device_signals, shared_realtime_data),
+                args=(device, device_signals, signals_group, realtime_device_index, realtime_signal_index),
                 daemon=True
             ).start()
             logging.info(f"Proceso iniciado para el dispositivo {device['device_id']}: {device['device_name']}")
 
+# Definir la clase para manejar el diccionario compartido
+class RealtimeDataManager(BaseManager):
+    pass
+
 if __name__ == "__main__":
     manager = multiprocessing.Manager()
     realtime_data = manager.dict()
+
+    # Registrar el diccionario para que pueda ser accedido por otros procesos (como Streamlit)
+    RealtimeDataManager.register('get_realtime_data', callable=lambda: realtime_data)
+
+    # Iniciar el servidor que expondrá los datos
+    server = RealtimeDataManager(address=('127.0.0.1', 50000), authkey=b'secret')
+    server.start()
+
+    logging.info("Backend ejecutándose en 127.0.0.1:50000...")
 
     # Iniciar la recolección de datos
     start_data_collection(realtime_data)

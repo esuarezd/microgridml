@@ -1,31 +1,38 @@
 import pandas as pd
 import streamlit as st
-import threading
 import logging
-import time
-import asyncio
-# app local
-import data_collector
-import utils
+from multiprocessing.managers import BaseManager
+import os
 
-# Cargar configuraciones
-iot_devices = utils.load_json("config_iot_devices.json")
-iot_protocols = utils.load_json("config_iot_protocols.json")
-iot_signals = utils.load_json("config_iot_signals.json")
+# local
+import data_visualization
 
-# preprocesar configuraciones
-device_data = data_collector.preprocess_configuration_devices(iot_devices, iot_protocols, iot_signals)
-realtime_data = data_collector.preprocess_configuration_signals(iot_devices, iot_signals)
-# Iniciar hilos de recolección de datos para dispositivos habilitados
-for device_id, device_info in device_data.items():
-    if device_info["device"]["enabled"]:
-        thread = threading.Thread(
-            target=data_collector.host_data_collection,
-            args=(device_id, device_info["device"], device_info["signals"], realtime_data),
-            daemon=True
-        )
-        thread.start()
-        logging.info(f"Hilo iniciado para el dispositivo {device_id}: {device_info['device']['device_name']}")
+# Verificar si la carpeta 'logs' existe, si no, crearla
+if not os.path.exists('logs'):
+    os.makedirs('logs')
+
+# Configurar el sistema de logging
+logging.basicConfig(
+    level=logging.INFO,  # Nivel de severidad (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    format="%(asctime)s [%(levelname)s] %(message)s",  # Formato del mensaje
+    handlers=[
+        logging.StreamHandler(),  # Mostrar en la terminal
+        logging.FileHandler("logs/streamlit_app.log", mode="a")  # Registrar en un archivo
+    ]
+)
+
+class RealtimeDataManager(BaseManager):
+    pass
+
+# Registrar el diccionario compartido
+RealtimeDataManager.register('get_realtime_data')
+
+def connect_to_realtime_data():
+    """Conectar al diccionario de datos en tiempo real."""
+    manager = RealtimeDataManager(address=('127.0.0.1', 50000), authkey=b'secret')
+    manager.connect()
+    return manager.get_realtime_data()
+
 
 # Configuración de la página
 st.set_page_config(
@@ -34,6 +41,12 @@ st.set_page_config(
     page_icon="☀️"  # Ícono de sol
 )
 
+# Conexión al backend
+try:
+    realtime_data = connect_to_realtime_data()
+except Exception as e:
+    st.error(f"Error conectando a datos en tiempo real: {e}")
+    realtime_data = {}
 
 # Inicializar el estado de navegación
 if "page" not in st.session_state:
@@ -62,37 +75,7 @@ if st.session_state["page"] == "Realtime":
     st.write("Datos de tiempo real. version 21-Ene 1:00 am")
     st.write("Paneles Solares:")
     # Placeholder para la tabla
-    placeholder = st.empty()
-
-    async def update_table():
-        while True:
-            # Generar lista de señales
-            signals_list = [
-                {
-                    "signal_id": signal_info["signal_id"],
-                    "obj_path": signal_info["obj_path"],
-                    "signal_name": signal_info["signal_name"],
-                    "signal_type": signal_info["signal_type"],
-                    "value": signal_info["value"],
-                    "unit": signal_info["unit"],
-                    "timestamp": signal_info["timestamp"],
-                }
-                for signal_info in realtime_data.values()
-            ]
-            df_rt = pd.DataFrame(signals_list)
-
-            # Formatear timestamp si hay datos
-            if not df_rt.empty:
-                df_rt["timestamp"] = pd.to_datetime(df_rt["timestamp"], unit="s").dt.strftime("%Y-%m-%d %H:%M:%S")
-
-            # Actualizar la tabla en el placeholder
-            placeholder.dataframe(df_rt)
-
-            # Esperar un segundo antes de actualizar
-            await asyncio.sleep(20)
-
-    # Iniciar la tarea asíncrona
-    asyncio.run(update_table())
+    
 
 
 elif st.session_state["page"] == "History":
@@ -101,24 +84,16 @@ elif st.session_state["page"] == "History":
 
 elif st.session_state["page"] == "Devices":
     st.title("Microgrid ML")
-    st.write("Estado comunicación de los Dispositivos IoT. version 19-Ene 8:43 pm")
+    st.write("Estado comunicación de los Dispositivos IoT (Versión 1-Feb 2:11 pm)")
 
     # Construir DataFrame para dispositivos
-    device_list = [
-        {
-            "enabled": device_info["device"]["enabled"],
-            "device_id": device_info["device"]["device_id"],
-            "device_name": device_info["device"]["device_name"],
-            "host": device_info["device"]["host"],
-            "protocol_name": device_info["device"]["protocol_name"],
-            "connection_status": device_info["device"]["connection_status"],
-        }
-        for device_info in device_data.values()
-    ]
-    df_devices = pd.DataFrame(device_list)
-    if df_devices.empty:
+    group_id=0
+    device_data = realtime_data.get(group_id, None)
+    if device_data is None:
         st.write("No hay dispositivos configurados.")
     else:
+        device_list = data_visualization.get_device_list(device_data)
+        df_devices = pd.DataFrame(device_list)
         st.dataframe(df_devices)
 
 # Manejo de cierre de conexiones

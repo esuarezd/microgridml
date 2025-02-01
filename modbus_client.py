@@ -1,6 +1,11 @@
 from pymodbus.client import ModbusTcpClient
 from datetime import datetime
 import logging
+import os
+
+# Verificar si la carpeta 'logs' existe, si no, crearla
+if not os.path.exists('logs'):
+    os.makedirs('logs')
 
 # Configuración de logging
 logging.basicConfig(
@@ -8,7 +13,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler("modbus_client.log", mode="a")
+        logging.FileHandler("logs/modbus_client.log", mode="a")
     ]
 )
 
@@ -17,20 +22,18 @@ connections = {}
 
 def get_or_create_connection(device):
     """Obtiene o crea una conexión persistente."""
-    host = device['host']
-    port = device['port']
-
+    host = device.get('host', None)
+    port = device.get('port', 502)
+    
     try:
         if host not in connections or not connections[host].is_socket_open():
             client = ModbusTcpClient(host=host, port=port)
             if not client.connect():
-                device['connection_status'] = "Failure"
                 logging.warning(f"No se pudo conectar al equipo en {host}:{port}")
                 return None
             
             connections[host] = client
         # fin if
-        device["connection_status"] = "Good"
         return connections[host]
     except Exception as e:
         logging.error(f"Error al intentar conectar con {host}:{port}: {e}")
@@ -38,15 +41,18 @@ def get_or_create_connection(device):
 
 def get_signals(device, device_signals):
     """Lee las señales de un dispositivo Modbus."""
-    device_id = device["device_id"]
-    client = get_or_create_connection(device)
+    device_id = device.get('device_id', None)
+    connection_status = {'device_id': device_id, 'value': None, 'timestamp':0, 'source': 0, 'quality': 0}
 
+    client = get_or_create_connection(device)
+    connection_status.update({'timestamp':datetime.now().timestamp(), 'source': 1, 'quality': 1})
     if not client or not client.is_socket_open():
-        device["connection_status"] = "Failure"
+        connection_status.update({'value': 'Failure'})
         logging.warning(f"No se pudo establecer la conexión para el dispositivo {device_id}")
-        return list()
+        return connection_status, None
 
     results = list()
+    connection_status.update({'value': 'Connected'})
     for signal in device_signals:
         try:
             if signal['enabled']:
@@ -63,21 +69,13 @@ def get_signals(device, device_signals):
                     if result.registers:
                         value_protocol = result.registers[0]
                         value_scaled = (offset + value_protocol / scale_factor )
-                        modbus_data = {
-                        'signal_id': signal_id,
-                        'value': value_scaled,
-                        'value_protocol': value_protocol,
-                        'timestamp': datetime.now().timestamp(),
-                        'quality': 1,
-                        'source': 1
-                        }
+                        modbus_data = {'signal_id': signal_id, 'value': value_scaled,'value_protocol': value_protocol,'timestamp': datetime.now().timestamp(),'quality': 1,'source': 1}
                     else:
                         modbus_data = {}
                     results.append(modbus_data)
         except Exception as e:
             logging.error(f"Error al procesar la señal {signal.get('signal_id', 'signal_id no encontrado')} del dispositivo {device_id}: {e}")
-            results[signal["signal_id"]] = None  # Valor predeterminado en caso de excepción
-    return results
+    return connection_status, results
 
 def close_all_connections():
     """Cierra todas las conexiones abiertas."""
