@@ -79,23 +79,28 @@ if st.session_state["page"] == "Home":
 
 if st.session_state["page"] == "Realtime":
     st.title("Microgrid ML")
-    st.write("Datos de tiempo real. version 1-feb-2025 7:45 pm")
+    st.write("Datos de tiempo real. version 3-feb-2025 11:25 am")
     placeholder = st.empty()  # Reservar espacio para la tabla de señales
 
     while True:
         if realtime_data:
+            realtime_data_dict = realtime_data.copy()
+            st.write("Datos en tiempo real:", realtime_data_dict)  # Mostrar los datos recibidos
             # Construcción de la tabla de tiempo real
             data_list = []
-            for group_id, signals in realtime_data.items():
+            for group_id, signals in realtime_data_dict.items():
                 if group_id != 0:  # Excluir dispositivos, solo mostrar señales
                     for signal in signals:
                         data_list.append({
-                            "enable":signal.get("enabled"),
-                            "group_name":signal.get("group_name"),
-                            "path1":signal.get("path1"),
-                            "Signal Name": signal.get("signal_name"),
-                            "Value": signal.get("value"),
-                            "Last Updated": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(signal.get("timestamp", 0)))
+                            "enable":signal.get('enabled'),
+                            "group_name":signal.get('group_name'),
+                            "path1":signal.get('path1'),
+                            "Signal Name": signal.get('signal_name'),
+                            "data type": signal.get('data_type'),
+                            "value protocol": signal.get('value_protocol'),
+                            "scale factor": signal.get('scale_factor'),
+                            "Value": signal.get('value'),
+                            "Last Updated": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(signal.get('timestamp')))
                         })
             df = pd.DataFrame(data_list)
             placeholder.dataframe(df)
@@ -126,6 +131,7 @@ elif st.session_state["page"] == "Devices":
                     "Device Name": device.get("device_name"),
                     "Host": device.get("host"),
                     "Protocol": device.get("protocol_name"),
+                    "unit id": device.get('unit_id'),
                     "Status": device.get("value", None),  # Este campo muestra "Good", "Failure", etc.
                     "Last Updated": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(device.get("timestamp", 0)))
                 }

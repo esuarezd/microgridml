@@ -6,7 +6,7 @@ import os
 from multiprocessing.managers import BaseManager
 
 #local
-import app.modbus as modbus
+import app.modbus_client as modbus_client
 
 # Verificar si la carpeta 'logs' existe, si no, crearla
 if not os.path.exists('logs'):
@@ -38,7 +38,7 @@ def build_configuration_devices(iot_devices, iot_protocols, group_name):
             **device, 
             "protocol_name": protocol_name, 
             "group_name": group_name,
-            "value": None,
+            "value": 0,
             "quality": 0,
             "source": 0,
             "timestamp": 0
@@ -60,6 +60,7 @@ def build_configuration_signals(iot_signals, group_id, group_name):
                     { 
                     **signal, 
                     'group_name': group_name,
+                    'value_protocol': 0,
                     'value': 0,
                     'quality': 0,
                     'source': 0,
@@ -81,7 +82,7 @@ def host_data_collection(device, device_signals, realtime_data):
     protocol_id = device.get("protocol_id")
     if protocol_id == 0: # ModbusTcpClient
             logging.info(f"start connection to device {device_id}")
-            modbus.client(device, device_signals, realtime_data)
+            modbus_client.main(device, device_signals, realtime_data)
     elif protocol_id == 1: # Mqtt
         pass
     elif protocol_id == 2: # dds
@@ -107,10 +108,10 @@ def build_realtime_data(iot_devices, iot_protocols, iot_signals, signals_group, 
         group_name = group.get('group_name')
         if group_id == 0:
             realtime_data[group_id] = build_configuration_devices(iot_devices, iot_protocols, group_name)
-            logging.info(f"Device configuration loaded: {realtime_data[group_id]}")
+            logging.info(f"Device configuration loaded")
         else:
             realtime_data[group_id] = build_configuration_signals(iot_signals, group_id, group_name)
-            logging.info(f"Signals configuration loaded: {realtime_data[group_id]}")
+            logging.info(f"Signals configuration loaded for group {group_id}")
     #return realtime_data
 
 def load_json(file_path):
@@ -125,19 +126,21 @@ def load_json(file_path):
         print(f"Error: El archivo {file_path} no tiene un formato JSON válido. Detalles: {e}")
         return None
 
-def start_data_collection(iot_devices, iot_signals, realtime_data):
-    """Inicia la recolección de datos."""
+def delete_start_data_collection(iot_devices, iot_signals, realtime_data):
+    
     # Iniciar hilos de recolección de datos para dispositivos habilitados
     
     for device in iot_devices:
         if device["enabled"]:
             device_signals = next((m["device_signals"] for m in iot_signals if m["device_id"] == device["device_id"]), "Unknown")
 
-            multiprocessing.Process(
+            process = multiprocessing.Process(
                 target=host_data_collection,
                 args=(device, device_signals, realtime_data),
                 daemon=True
-            ).start()
+            )
+            process.start()
+            process.join()
             logging.info(f"Proceso iniciado para el dispositivo {device['device_id']}: {device['device_name']}")
 
 # Definir la clase para manejar el diccionario compartido
@@ -166,10 +169,22 @@ if __name__ == "__main__":
         build_realtime_data(iot_devices, iot_protocols, iot_signals, signals_group, realtime_data)
 
         # Iniciar la recolección de datos
-        start_data_collection(iot_devices, iot_signals, realtime_data)
+        #start_data_collection(iot_devices, iot_signals, realtime_data)
+        for device in iot_devices:
+            if device["enabled"]:
+                device_signals = next((m["device_signals"] for m in iot_signals if m["device_id"] == device["device_id"]), ["Unknown"])
+
+                process = multiprocessing.Process(
+                    target=host_data_collection,
+                    args=(device, device_signals, realtime_data),
+                    daemon=True
+                )
+                process.start()
+                process.join()
+                logging.info(f"Proceso iniciado para el dispositivo {device['device_id']}: {device['device_name']}")
 
         # Mantener el backend activo
-        print("Backend ejecutándose...")
+        logging.info(f"Backend ejecutándose...")
         while True:
             time.sleep(1)
     except Exception as e:
