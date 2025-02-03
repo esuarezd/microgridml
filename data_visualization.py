@@ -24,7 +24,7 @@ def get_device_list(device_data):
             "device_name": device_info.get('device_name', None),
             "host": device_info.get('host', None),
             "protocol_name": device_info.get('protocol_name', None),
-            "connection_status": device_info.get('value', None),
+            "connection_status": device_info.get('value')
         }
         for device_info in device_data
     ]

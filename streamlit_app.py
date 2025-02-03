@@ -1,8 +1,9 @@
 import pandas as pd
 import streamlit as st
 import logging
-from multiprocessing.managers import BaseManager
+import time
 import os
+from multiprocessing.managers import BaseManager
 
 # local
 import data_visualization
@@ -29,9 +30,14 @@ RealtimeDataManager.register('get_realtime_data')
 
 def connect_to_realtime_data():
     """Conectar al diccionario de datos en tiempo real."""
-    manager = RealtimeDataManager(address=('127.0.0.1', 50000), authkey=b'secret')
-    manager.connect()
-    return manager.get_realtime_data()
+    try:
+        manager = RealtimeDataManager(address=('127.0.0.1', 50000), authkey=b'secret')
+        manager.connect()
+        logging.info("Conectado al backend de datos en tiempo real.")
+        return manager.get_realtime_data()
+    except Exception as e:
+        logging.error(f"Error conectando a datos en tiempo real: {e}")
+        return None
 
 
 # Configuración de la página
@@ -46,6 +52,7 @@ try:
     realtime_data = connect_to_realtime_data()
 except Exception as e:
     st.error(f"Error conectando a datos en tiempo real: {e}")
+    logging.error(f"Error conectando a datos en tiempo real: {e}")
     realtime_data = {}
 
 # Inicializar el estado de navegación
@@ -72,9 +79,30 @@ if st.session_state["page"] == "Home":
 
 if st.session_state["page"] == "Realtime":
     st.title("Microgrid ML")
-    st.write("Datos de tiempo real. version 21-Ene 1:00 am")
-    st.write("Paneles Solares:")
-    # Placeholder para la tabla
+    st.write("Datos de tiempo real. version 1-feb-2025 7:45 pm")
+    placeholder = st.empty()  # Reservar espacio para la tabla de señales
+
+    while True:
+        if realtime_data:
+            # Construcción de la tabla de tiempo real
+            data_list = []
+            for group_id, signals in realtime_data.items():
+                if group_id != 0:  # Excluir dispositivos, solo mostrar señales
+                    for signal in signals:
+                        data_list.append({
+                            "enable":signal.get("enabled"),
+                            "group_name":signal.get("group_name"),
+                            "path1":signal.get("path1"),
+                            "Signal Name": signal.get("signal_name"),
+                            "Value": signal.get("value"),
+                            "Last Updated": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(signal.get("timestamp", 0)))
+                        })
+            df = pd.DataFrame(data_list)
+            placeholder.dataframe(df)
+        else:
+            placeholder.error("No se pudo conectar al backend de datos en tiempo real.")
+
+        time.sleep(60)  # Refrescar cada 5 segundos
     
 
 
@@ -84,17 +112,29 @@ elif st.session_state["page"] == "History":
 
 elif st.session_state["page"] == "Devices":
     st.title("Microgrid ML")
-    st.write("Estado comunicación de los Dispositivos IoT (Versión 1-Feb 2:11 pm)")
+    st.write("Estado comunicación de los Dispositivos IoT (Versión 1-Feb 9:23 pm)")
 
-    # Construir DataFrame para dispositivos
-    group_id=0
-    device_data = realtime_data.get(group_id, None)
-    if device_data is None:
-        st.write("No hay dispositivos configurados.")
-    else:
-        device_list = data_visualization.get_device_list(device_data)
-        df_devices = pd.DataFrame(device_list)
-        st.dataframe(df_devices)
+    device_placeholder = st.empty()  # Reservar espacio para la tabla de dispositivos
 
-# Manejo de cierre de conexiones
-#st.sidebar.button("Cerrar conexiones", on_click=data_collector.close_all_connections)
+    while True:
+        if realtime_data:
+            devices = realtime_data.get(0, [])  # group_id = 0 para dispositivos
+            device_list = [
+                {
+                    "enabled": device.get("enabled"),
+                    "Device ID": device.get("device_id"),
+                    "Device Name": device.get("device_name"),
+                    "Host": device.get("host"),
+                    "Protocol": device.get("protocol_name"),
+                    "Status": device.get("value", None),  # Este campo muestra "Good", "Failure", etc.
+                    "Last Updated": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(device.get("timestamp", 0)))
+                }
+                for device in devices
+            ]
+
+            df_devices = pd.DataFrame(device_list)
+            device_placeholder.dataframe(df_devices)
+        else:
+            device_placeholder.error("No hay información de dispositivos disponible.")
+
+        time.sleep(60)  # Refrescar cada 5 segundos

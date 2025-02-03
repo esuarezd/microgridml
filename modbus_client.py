@@ -22,6 +22,7 @@ connections = {}
 
 def get_or_create_connection(device):
     """Obtiene o crea una conexión persistente."""
+    device_id = device.get('device_id', None)
     host = device.get('host', None)
     port = device.get('port', 502)
     
@@ -42,37 +43,58 @@ def get_or_create_connection(device):
 def get_signals(device, device_signals):
     """Lee las señales de un dispositivo Modbus."""
     device_id = device.get('device_id', None)
-    connection_status = {'device_id': device_id, 'value': None, 'timestamp':0, 'source': 0, 'quality': 0}
+    results = list()
+    connection_status = {
+        'device_id': device_id, 
+        'value': None, 
+        'timestamp': datetime.now().timestamp(), 
+        'source': 1, 
+        'quality': 1
+    }
 
     client = get_or_create_connection(device)
-    connection_status.update({'timestamp':datetime.now().timestamp(), 'source': 1, 'quality': 1})
+    
     if not client or not client.is_socket_open():
-        connection_status.update({'value': 'Failure'})
+        connection_status.update(
+            {
+                'value': 'Failure'   
+            }
+        )
         logging.warning(f"No se pudo establecer la conexión para el dispositivo {device_id}")
-        return connection_status, None
+        return connection_status,
 
-    results = list()
-    connection_status.update({'value': 'Connected'})
+    
+    connection_status.update(
+        {
+            'value': 'Connected'
+        }
+    )
     for signal in device_signals:
         try:
             if signal['enabled']:
                 address = signal['address']
                 slave = signal['slave_id']
+                signal_id = signal.get('signal_id')
                 result = client.read_input_registers(address=address, slave=slave)
+                modbus_data = {
+                    'signal_id': signal_id, 
+                    'address': address, 
+                    'slave': slave, 
+                    'timestamp': datetime.now().timestamp()
+                }
                 if result.isError():
                     logging.warning(f"No se pudo leer la señal {signal.get('signal_id', 'signal_id no encontrado')} en la dirección {address} con slave {slave} del dispositivo {device_id}")
-                    results[signal["signal_id"]] = None  # Valor predeterminado en caso de error
-                else:
-                    signal_id = signal.get('signal_id', None)
-                    scale_factor = signal.get('scale_factor', 1)
-                    offset = signal.get('offset', 0)
+                else:  
                     if result.registers:
                         value_protocol = result.registers[0]
-                        value_scaled = (offset + value_protocol / scale_factor )
-                        modbus_data = {'signal_id': signal_id, 'value': value_scaled,'value_protocol': value_protocol,'timestamp': datetime.now().timestamp(),'quality': 1,'source': 1}
-                    else:
-                        modbus_data = {}
-                    results.append(modbus_data)
+                        modbus_data.update(
+                            {
+                                'value_protocol': value_protocol,
+                                'quality': 1,
+                                'source': 1
+                            }
+                        )
+                        results.append(modbus_data)
         except Exception as e:
             logging.error(f"Error al procesar la señal {signal.get('signal_id', 'signal_id no encontrado')} del dispositivo {device_id}: {e}")
     return connection_status, results
