@@ -84,11 +84,12 @@ if st.session_state["page"] == "Realtime":
 
     while True:
         if realtime_data:
+            #codigo temporal para ver que se esta leyendo
             realtime_data_dict = realtime_data.copy()
             st.write("Datos en tiempo real:", realtime_data_dict)  # Mostrar los datos recibidos
             # Construcción de la tabla de tiempo real
             data_list = []
-            for group_id, signals in realtime_data_dict.items():
+            for group_id, signals in realtime_data.items():
                 if group_id != 0:  # Excluir dispositivos, solo mostrar señales
                     for signal in signals:
                         data_list.append({

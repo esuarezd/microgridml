@@ -156,8 +156,8 @@ if __name__ == "__main__":
 
     # Iniciar el servidor que expondrá los datos
     server = RealtimeDataManager(address=('127.0.0.1', 50000), authkey=b'secret')
+    server.start()
     try:
-        server.start()
         logging.info(f"Backend ejecutándose en 127.0.0.1:50000...")
 
         # Cargar configuraciones
@@ -180,7 +180,6 @@ if __name__ == "__main__":
                     daemon=True
                 )
                 process.start()
-                process.join()
                 logging.info(f"Proceso iniciado para el dispositivo {device['device_id']}: {device['device_name']}")
 
         # Mantener el backend activo
