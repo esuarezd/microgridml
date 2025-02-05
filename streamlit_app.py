@@ -83,6 +83,16 @@ if st.sidebar.button("Devices"):
 if st.session_state["page"] == "Home":
     st.title("Microgrid ML")
     st.write("Sistema IoT en ejecución.")
+    # Convertir realtime_data a un diccionario regular antes de mostrarlo
+    try:
+        realtime_data_dict = dict(realtime_data).copy
+        if isinstance(realtime_data_dict, dict):
+            st.json(realtime_data_dict)
+        else:
+            st.error("Los datos en tiempo real no son un diccionario válido.")
+    except Exception as e:
+        st.error(f"Error mostrando los datos: {e}")
+    
 
 if st.session_state["page"] == "Realtime":
     st.title("Microgrid ML")
