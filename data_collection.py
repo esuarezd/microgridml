@@ -5,7 +5,7 @@ import logging
 import os
 from multiprocessing.managers import BaseManager
 
-#local
+#local import
 import app.modbus_client as modbus_client
 
 # Verificar si la carpeta 'logs' existe, si no, crearla
@@ -70,7 +70,7 @@ def build_configuration_signals(iot_signals, group_id, group_name):
     #logging.info(f"Signals data preprocessed: {signals_data}")
     return signals_data    
 
-def host_data_collection(device, device_signals, realtime_data):
+def host_data_collection(realtime_data, device, device_signals):
     """Hilo de recolección de datos para un dispositivo específico.
 
     Args:
@@ -82,7 +82,7 @@ def host_data_collection(device, device_signals, realtime_data):
     protocol_id = device.get("protocol_id")
     if protocol_id == 0: # ModbusTcpClient
             logging.info(f"start connection to device {device_id}")
-            modbus_client.main(device, device_signals, realtime_data)
+            modbus_client.main(realtime_data, device, device_signals)
     elif protocol_id == 1: # Mqtt
         pass
     elif protocol_id == 2: # dds
@@ -92,7 +92,7 @@ def host_data_collection(device, device_signals, realtime_data):
 
             
 
-def build_realtime_data(iot_devices, iot_protocols, iot_signals, signals_group, realtime_data):
+def build_realtime_data(realtime_data, iot_devices, iot_protocols, iot_signals, signals_group):
     """constructor del diccionario realtime_data
 
     Args:
@@ -125,6 +125,8 @@ def load_json(file_path):
     except json.JSONDecodeError as e:
         print(f"Error: El archivo {file_path} no tiene un formato JSON válido. Detalles: {e}")
         return None
+
+
 
 def delete_start_data_collection(iot_devices, iot_signals, realtime_data):
     
@@ -166,7 +168,7 @@ if __name__ == "__main__":
         iot_signals = load_json("data/config_iot_signals.json")
         signals_group = load_json("data/config_signals_group.json")
 
-        build_realtime_data(iot_devices, iot_protocols, iot_signals, signals_group, realtime_data)
+        #build_realtime_data(realtime_data, iot_devices, iot_protocols, iot_signals, signals_group)
 
         # Iniciar la recolección de datos
         #start_data_collection(iot_devices, iot_signals, realtime_data)
@@ -176,8 +178,7 @@ if __name__ == "__main__":
 
                 process = multiprocessing.Process(
                     target=host_data_collection,
-                    args=(device, device_signals, realtime_data),
-                    daemon=True
+                    args=(realtime_data, device, device_signals)
                 )
                 process.start()
                 logging.info(f"Proceso iniciado para el dispositivo {device['device_id']}: {device['device_name']}")

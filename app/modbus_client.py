@@ -1,5 +1,6 @@
 import logging
 import time
+import json
 import os
 from pyModbusTCP.client import ModbusClient
 from datetime import datetime
@@ -18,33 +19,48 @@ logging.basicConfig(
     ]
 )
 
-def update_realtime_data(signals_group, modbus_node, device_id, signal_id):
+def save_realtime_data_to_json(realtime_data, file_path='data/realtime_data_snapshot.json'):
+    """Guarda el diccionario realtime_data en un archivo JSON para depuración."""
+    try:
+        # Convertir el diccionario compartido a uno normal antes de guardar
+        data_to_save = {k: v for k, v in realtime_data.items()}
+        with open(file_path, 'w') as f:
+            json.dump(data_to_save, f, indent=4)
+        logging.info(f"realtime_data guardado exitosamente en {file_path}")
+    except Exception as e:
+        logging.error(f"Error al guardar realtime_data en JSON: {e}")
 
+
+def old_update_realtime_data(realtime_data, group_id, modbus_node, device_id, signal_id):
+    signals_group = realtime_data[group_id]
     pos = buscar_posicion(signals_group, "signal_id", signal_id)
-    signal = signals_group[pos]
-    scale_factor = signal.get('scale_factor', 1)
-    offset = signal.get('offset', 0)
-    data_type = signal.get('data_type')
-    value_protocol = modbus_node.get('value')
-    if data_type == "uint16":
-        # Convertir el valor a un número uint16
-        value_data_type = value_protocol & 0xFFFF
-    elif data_type == "int16" and (modbus_node.get('value') > 32767):
-        value_data_type = value_protocol - 65536
-    else: # int16
-        value_data_type = value_protocol
-    value = offset + (value_data_type / scale_factor)
-    signal.update(
-        {
-            'value_protocol': value_protocol,
-            'value_data_type': value_data_type,
-            'value':value,
-            'timestamp':modbus_node.get('timestamp'),
-            'quality':modbus_node.get('quality'),
-            'source':modbus_node.get('source')
-        }
-    )
-    logging.info(f"Datos actualizados: device_id:{device_id}, signal_id: {signal_id}, name:{signal.get('signal_name')}, data type: {signal.get('data_type')}, value protocol:{signal.get('value_protocol')}, scale factor: {signal.get('scale_factor')}, value: {signal.get('value')}, timestamp: {signal.get('timestamp')}")
+    if pos == -1:
+        logging.warning(f"No se encontró la señal con ID {signal_id} en signals_group.")
+    else:
+        signal = signals_group[pos]
+        scale_factor = signal.get('scale_factor', 1)
+        offset = signal.get('offset', 0)
+        data_type = signal.get('data_type')
+        value_protocol = modbus_node.get('value_protocol')
+        if data_type == "uint16":
+            # Convertir el valor a un número uint16
+            value_data_type = value_protocol & 0xFFFF
+        elif data_type == "int16" and (modbus_node.get('value_protocol') > 32767):
+            value_data_type = value_protocol - 65536
+        else: # int16
+            value_data_type = value_protocol
+        value = offset + (value_data_type / scale_factor)
+        signal.update(
+            {
+                "value_protocol": value_protocol,
+                "value_data_type": value_data_type,
+                "value": value,
+                "timestamp": modbus_node.get('timestamp'),
+                "quality": modbus_node.get('quality'),
+                "source": modbus_node.get('source')
+            }
+        )
+        logging.info(f"Datos actualizados: device_id:{device_id}, signal_id: {signal_id}, name:{signal.get('signal_name')}, data type: {signal.get('data_type')}, value protocol:{signal.get('value_protocol')}, scale factor: {signal.get('scale_factor')}, value: {signal.get('value')}, timestamp: {signal.get('timestamp')}")
 
 
 def buscar_posicion(lista, llave, valor_buscado):
@@ -53,16 +69,44 @@ def buscar_posicion(lista, llave, valor_buscado):
             return i  # Devuelve la posición (índice) donde se encuentra el valor
     return -1  # Si no se encuentra el valor, retorna -1
 
+def update_realtime_data(realtime_data, device_id, signal, modbus_node):
+    signal_id = signal.get('signal_id')
+    scale_factor = signal.get('scale_factor', 1)
+    offset = signal.get('offset', 0)
+    data_type = signal.get('data_type')
+    value_protocol = modbus_node.get('value_protocol')
+    if data_type == "uint16":
+        # Convertir el valor a un número uint16
+        value_data_type = value_protocol & 0xFFFF
+    elif data_type == "int16" and (modbus_node.get('value_protocol') > 32767):
+        value_data_type = value_protocol - 65536
+    else: # int16
+        value_data_type = value_protocol
+    value = offset + (value_data_type / scale_factor)
+    realtime_signal_value = {
+        **modbus_node, 
+        "value_data_type": value_data_type,
+        "value": value,
+        "group_id": signal.get('group_id'),
+        "device_id": device_id
+    }
+    realtime_data.update(
+        { 
+            signal_id: realtime_signal_value
+        }
+    )
+
+
 def new_modbus_node():
     modbus_node = {
-        'value': 0,
+        'value_protocol': 0,
         'timestamp': datetime.now().timestamp(),
         'quality':0,
         'source':0
     }
     return modbus_node
 
-def main(device, device_signals, realtime_data):
+def main(realtime_data, device, device_signals):
     """ Cliente tcp Modbus
 
     Args:
@@ -80,14 +124,12 @@ def main(device, device_signals, realtime_data):
         client.open()
         logging.info(f"Device {device_id} is open...")
         while True:
-            contador = 0
             for signal in device_signals:
                 enabled = signal.get('enabled')
-                if enabled:    
+                if enabled:
+                    signal_id = signal.get('signal_id')  
                     function_code = signal.get('function_code', 4)
                     address = signal.get('address')
-                    signal_id = signal.get('signal_id')
-                    group_id = signal.get('group_id')
                     modbus_node = new_modbus_node()
                     if function_code == 1:
                         pass
@@ -97,13 +139,14 @@ def main(device, device_signals, realtime_data):
                         modbus_input_register = client.read_input_registers(reg_addr=address)
                         if modbus_input_register:
                             value = modbus_input_register[0]
-                            modbus_node.update({'value': value, 'quality': 1, 'source': 1})
-                            update_realtime_data(realtime_data[group_id], modbus_node, device_id, signal_id)
+                            modbus_node.update({"value_protocol": value, "quality": 1, "source": 1})
+                            logging.info(f"Datos leidos de device_id:{device_id}, signal_id: {signal_id}, modbus: {modbus_node}")
+                            update_realtime_data(realtime_data, device_id, signal, modbus_node)
+                            logging.info(f"Datos actualizados de device_id:{device_id}, signal_id: {signal_id}, realtime_data: {realtime_data.get(signal_id)}")
+                            #save_realtime_data_to_json(realtime_data)
                     else:
                         logging.warning(f"No hay function code definido para la señal con signal_id {signal.get('signal_id')}")
-                    time.sleep(2)
-                    contador += 1
-            time.sleep(interval - contador*2)
+            time.sleep(interval)
     
     except ConnectionError as ce:
         logging.error(f"Connection lost for device {device_id}: {ce}")

@@ -1,12 +1,12 @@
 import pandas as pd
 import streamlit as st
+import json
 import logging
 import time
 import os
 from multiprocessing.managers import BaseManager
 
 # local
-import data_visualization
 
 # Verificar si la carpeta 'logs' existe, si no, crearla
 if not os.path.exists('logs'):
@@ -39,6 +39,16 @@ def connect_to_realtime_data():
         logging.error(f"Error conectando a datos en tiempo real: {e}")
         return None
 
+# Cargar configuraciones de señales y grupos
+with open('data/config_iot_signals.json') as f:
+    config_iot_signals = json.load(f)
+
+with open('data/config_signals_group.json') as f:
+    config_signals_group = {group['group_id']: group['group_name'] for group in json.load(f)}
+
+with open('data/config_iot_devices.json') as f:
+    config_iot_devices = {device['device_id']: device['enabled'] for device in json.load(f)}
+
 
 # Configuración de la página
 st.set_page_config(
@@ -62,13 +72,10 @@ if "page" not in st.session_state:
 # Sidebar con botones para navegar
 if st.sidebar.button("Home"):
     st.session_state["page"] = "Home"
-
 if st.sidebar.button("Realtime"):
     st.session_state["page"] = "Realtime"
-
 if st.sidebar.button("History"):
     st.session_state["page"] = "History"
-
 if st.sidebar.button("Devices"):
     st.session_state["page"] = "Devices"
 
@@ -79,36 +86,38 @@ if st.session_state["page"] == "Home":
 
 if st.session_state["page"] == "Realtime":
     st.title("Microgrid ML")
-    st.write("Datos de tiempo real. version 3-feb-2025 11:25 am")
+    st.write("Datos de tiempo real. version 4-feb-2025 8:35 am")
     placeholder = st.empty()  # Reservar espacio para la tabla de señales
 
     while True:
         if realtime_data:
-            #codigo temporal para ver que se esta leyendo
-            realtime_data_dict = realtime_data.copy()
-            st.write("Datos en tiempo real:", realtime_data_dict)  # Mostrar los datos recibidos
             # Construcción de la tabla de tiempo real
             data_list = []
-            for group_id, signals in realtime_data.items():
-                if group_id != 0:  # Excluir dispositivos, solo mostrar señales
-                    for signal in signals:
-                        data_list.append({
-                            "enable":signal.get('enabled'),
-                            "group_name":signal.get('group_name'),
-                            "path1":signal.get('path1'),
-                            "Signal Name": signal.get('signal_name'),
-                            "data type": signal.get('data_type'),
-                            "value protocol": signal.get('value_protocol'),
-                            "scale factor": signal.get('scale_factor'),
-                            "Value": signal.get('value'),
-                            "Last Updated": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(signal.get('timestamp')))
-                        })
+            for device in config_iot_signals:
+                device_id = device['device_id']
+                if config_iot_devices.get(device_id, False):  # Verificar si el dispositivo está habilitado
+                    for signal in device['device_signals']:
+                        if signal['enabled']:
+                            signal_id = str(signal['signal_id'])  # Convertir a str para coincidir con las llaves del realtime_data
+                            signal_data = realtime_data.get(signal_id, {})
+                            group_name = config_signals_group.get(signal['group_id'], 'Unknown')
+
+                            data_list.append({
+                                "Group": group_name,
+                                "Signal ID": signal['signal_id'],
+                                "Path": signal['path1'],
+                                "Signal Name": signal['signal_name'],
+                                "Signal Type": "Digital" if signal['signal_type'] == 0 else "Float",
+                                "Unit": signal['unit'],
+                                "Value": signal_data.get('value', 'N/A'),
+                                "Timestamp": signal_data.get('timestamp', 'N/A')
+                            })
             df = pd.DataFrame(data_list)
             placeholder.dataframe(df)
         else:
             placeholder.error("No se pudo conectar al backend de datos en tiempo real.")
 
-        time.sleep(60)  # Refrescar cada 5 segundos
+        time.sleep(60)  
     
 
 
@@ -120,28 +129,4 @@ elif st.session_state["page"] == "Devices":
     st.title("Microgrid ML")
     st.write("Estado comunicación de los Dispositivos IoT (Versión 1-Feb 9:23 pm)")
 
-    device_placeholder = st.empty()  # Reservar espacio para la tabla de dispositivos
-
-    while True:
-        if realtime_data:
-            devices = realtime_data.get(0, [])  # group_id = 0 para dispositivos
-            device_list = [
-                {
-                    "enabled": device.get("enabled"),
-                    "Device ID": device.get("device_id"),
-                    "Device Name": device.get("device_name"),
-                    "Host": device.get("host"),
-                    "Protocol": device.get("protocol_name"),
-                    "unit id": device.get('unit_id'),
-                    "Status": device.get("value", None),  # Este campo muestra "Good", "Failure", etc.
-                    "Last Updated": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(device.get("timestamp", 0)))
-                }
-                for device in devices
-            ]
-
-            df_devices = pd.DataFrame(device_list)
-            device_placeholder.dataframe(df_devices)
-        else:
-            device_placeholder.error("No hay información de dispositivos disponible.")
-
-        time.sleep(60)  # Refrescar cada 5 segundos
+      
