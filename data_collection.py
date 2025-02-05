@@ -22,7 +22,9 @@ logging.basicConfig(
     ]
 )
 
-
+# Definir la clase para manejar el diccionario compartido
+class RealtimeDataManager(BaseManager):
+    pass
     
 def build_configuration_devices(iot_devices, iot_protocols, group_name):
     """Construye una estructura preprocesada para acceso rápido a los datos."""
@@ -90,7 +92,6 @@ def host_data_collection(realtime_data, device, device_signals):
     else:
         logging.warning(f"Unknown protocol_id {protocol_id} for device {device_id}")
 
-            
 
 def build_realtime_data(realtime_data, iot_devices, iot_protocols, iot_signals, signals_group):
     """constructor del diccionario realtime_data
@@ -128,33 +129,13 @@ def load_json(file_path):
 
 
 
-def delete_start_data_collection(iot_devices, iot_signals, realtime_data):
-    
-    # Iniciar hilos de recolección de datos para dispositivos habilitados
-    
-    for device in iot_devices:
-        if device["enabled"]:
-            device_signals = next((m["device_signals"] for m in iot_signals if m["device_id"] == device["device_id"]), "Unknown")
-
-            process = multiprocessing.Process(
-                target=host_data_collection,
-                args=(device, device_signals, realtime_data),
-                daemon=True
-            )
-            process.start()
-            process.join()
-            logging.info(f"Proceso iniciado para el dispositivo {device['device_id']}: {device['device_name']}")
-
-# Definir la clase para manejar el diccionario compartido
-class RealtimeDataManager(BaseManager):
-    pass
-
 if __name__ == "__main__":
     manager = multiprocessing.Manager()
     realtime_data = manager.dict()
 
     # Registrar el diccionario para que pueda ser accedido por otros procesos (como Streamlit)
     RealtimeDataManager.register('get_realtime_data', callable=lambda: realtime_data)
+    logging.info("Método 'get_realtime_data' registrado con éxito.")
 
     # Iniciar el servidor que expondrá los datos
     server = RealtimeDataManager(address=('127.0.0.1', 50000), authkey=b'secret')
@@ -186,7 +167,7 @@ if __name__ == "__main__":
         # Mantener el backend activo
         logging.info(f"Backend ejecutándose...")
         while True:
-            time.sleep(1)
+            time.sleep(5)
     except Exception as e:
         logging.error(f"Unexpected error for BaseManager: {e}")
         logging.info("Shutting down server ...")

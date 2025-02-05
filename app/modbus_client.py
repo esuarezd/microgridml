@@ -19,49 +19,6 @@ logging.basicConfig(
     ]
 )
 
-def save_realtime_data_to_json(realtime_data, file_path='data/realtime_data_snapshot.json'):
-    """Guarda el diccionario realtime_data en un archivo JSON para depuración."""
-    try:
-        # Convertir el diccionario compartido a uno normal antes de guardar
-        data_to_save = {k: v for k, v in realtime_data.items()}
-        with open(file_path, 'w') as f:
-            json.dump(data_to_save, f, indent=4)
-        logging.info(f"realtime_data guardado exitosamente en {file_path}")
-    except Exception as e:
-        logging.error(f"Error al guardar realtime_data en JSON: {e}")
-
-
-def old_update_realtime_data(realtime_data, group_id, modbus_node, device_id, signal_id):
-    signals_group = realtime_data[group_id]
-    pos = buscar_posicion(signals_group, "signal_id", signal_id)
-    if pos == -1:
-        logging.warning(f"No se encontró la señal con ID {signal_id} en signals_group.")
-    else:
-        signal = signals_group[pos]
-        scale_factor = signal.get('scale_factor', 1)
-        offset = signal.get('offset', 0)
-        data_type = signal.get('data_type')
-        value_protocol = modbus_node.get('value_protocol')
-        if data_type == "uint16":
-            # Convertir el valor a un número uint16
-            value_data_type = value_protocol & 0xFFFF
-        elif data_type == "int16" and (modbus_node.get('value_protocol') > 32767):
-            value_data_type = value_protocol - 65536
-        else: # int16
-            value_data_type = value_protocol
-        value = offset + (value_data_type / scale_factor)
-        signal.update(
-            {
-                "value_protocol": value_protocol,
-                "value_data_type": value_data_type,
-                "value": value,
-                "timestamp": modbus_node.get('timestamp'),
-                "quality": modbus_node.get('quality'),
-                "source": modbus_node.get('source')
-            }
-        )
-        logging.info(f"Datos actualizados: device_id:{device_id}, signal_id: {signal_id}, name:{signal.get('signal_name')}, data type: {signal.get('data_type')}, value protocol:{signal.get('value_protocol')}, scale factor: {signal.get('scale_factor')}, value: {signal.get('value')}, timestamp: {signal.get('timestamp')}")
-
 
 def buscar_posicion(lista, llave, valor_buscado):
     for i, diccionario in enumerate(lista):
@@ -106,6 +63,18 @@ def new_modbus_node():
     }
     return modbus_node
 
+def save_realtime_data_to_json(realtime_data, file_path='data/realtime_data_snapshot.json'):
+    """Guarda el diccionario realtime_data en un archivo JSON para depuración."""
+    try:
+        # Convertir el diccionario compartido a uno normal antes de guardar
+        data_to_save = {k: v for k, v in realtime_data.items()}
+        with open(file_path, 'w') as f:
+            json.dump(data_to_save, f, indent=4)
+        logging.info(f"realtime_data guardado exitosamente en {file_path}")
+    except Exception as e:
+        logging.error(f"Error al guardar realtime_data en JSON: {e}")
+
+
 def main(realtime_data, device, device_signals):
     """ Cliente tcp Modbus
 
@@ -142,7 +111,7 @@ def main(realtime_data, device, device_signals):
                             modbus_node.update({"value_protocol": value, "quality": 1, "source": 1})
                             logging.info(f"Datos leidos de device_id:{device_id}, signal_id: {signal_id}, modbus: {modbus_node}")
                             update_realtime_data(realtime_data, device_id, signal, modbus_node)
-                            logging.info(f"Datos actualizados de device_id:{device_id}, signal_id: {signal_id}, realtime_data: {realtime_data.get(signal_id)}")
+                            #logging.info(f"Data updated de device_id:{device_id}, signal_id: {signal_id}, realtime_data: {realtime_data.get(signal_id)}")
                             #save_realtime_data_to_json(realtime_data)
                     else:
                         logging.warning(f"No hay function code definido para la señal con signal_id {signal.get('signal_id')}")
