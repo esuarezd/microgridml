@@ -84,15 +84,11 @@ if st.session_state["page"] == "Home":
     st.title("Microgrid ML")
     st.write("Sistema IoT en ejecución.")
     # Convertir realtime_data a un diccionario regular antes de mostrarlo
-    try:
-        realtime_data_dict = dict(realtime_data).copy
-        if isinstance(realtime_data_dict, dict):
-            st.json(realtime_data_dict)
-        else:
-            st.error("Los datos en tiempo real no son un diccionario válido.")
-    except Exception as e:
-        st.error(f"Error mostrando los datos: {e}")
-    
+    while True: 
+        #codigo temporal para ver que se esta leyendo
+        realtime_data_dict = realtime_data.copy()
+        st.write("Datos en tiempo real:", realtime_data_dict)  # Mostrar los datos recibidos
+        time.sleep(60)
 
 if st.session_state["page"] == "Realtime":
     st.title("Microgrid ML")
@@ -100,32 +96,23 @@ if st.session_state["page"] == "Realtime":
     placeholder = st.empty()  # Reservar espacio para la tabla de señales
 
     while True:
-        if realtime_data:
-            # Construcción de la tabla de tiempo real
-            data_list = []
-            for device in config_iot_signals:
-                device_id = device['device_id']
-                if config_iot_devices.get(device_id, False):  # Verificar si el dispositivo está habilitado
-                    for signal in device['device_signals']:
-                        if signal['enabled']:
-                            signal_id = str(signal['signal_id'])  # Convertir a str para coincidir con las llaves del realtime_data
-                            signal_data = realtime_data.get(signal_id, {})
-                            group_name = config_signals_group.get(signal['group_id'], 'Unknown')
-
-                            data_list.append({
-                                "Group": group_name,
-                                "Signal ID": signal['signal_id'],
-                                "Path": signal['path1'],
-                                "Signal Name": signal['signal_name'],
-                                "Signal Type": "Digital" if signal['signal_type'] == 0 else "Float",
-                                "Unit": signal['unit'],
-                                "Value": signal_data.get('value', 'N/A'),
-                                "Timestamp": signal_data.get('timestamp', 'N/A')
-                            })
-            df = pd.DataFrame(data_list)
-            placeholder.dataframe(df)
-        else:
-            placeholder.error("No se pudo conectar al backend de datos en tiempo real.")
+        # Construcción de la tabla de tiempo real
+        realtime_data_dict = realtime_data.copy()
+        data_list = []
+        for signal_id, signal in realtime_data_dict.items():
+            data_list.append({
+                "signal_id":signal_id,
+                "group_id": signal.get('group_id'),
+                "device_id": signal.get('device_id'),
+                "value protocol": signal.get('value_protocol'),
+                "value data type": signal.get('value_data_type'),
+                "value": signal.get('value'),
+                "timestamp": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(signal.get('timestamp')))
+            })
+        df = pd.DataFrame(data_list)
+        placeholder.dataframe(df)
+        df = pd.DataFrame(data_list)
+        placeholder.dataframe(df)
 
         time.sleep(60)  
     

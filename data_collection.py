@@ -26,51 +26,6 @@ logging.basicConfig(
 class RealtimeDataManager(BaseManager):
     pass
     
-def build_configuration_devices(iot_devices, iot_protocols, group_name):
-    """Construye una estructura preprocesada para acceso rápido a los datos."""
-    device_data = list()
-
-    for device in iot_devices:
-        protocol_id = device["protocol_id"]
-
-        protocol_name = next((m["protocol_name"] for m in iot_protocols if m["protocol_id"] == protocol_id), "Unknown")
-
-        device_data.append( 
-            { 
-            **device, 
-            "protocol_name": protocol_name, 
-            "group_name": group_name,
-            "value": 0,
-            "quality": 0,
-            "source": 0,
-            "timestamp": 0
-            }
-        )
-    #logging.info(f"Device data preprocessed: {device_data}")
-    return device_data
-
-def build_configuration_signals(iot_signals, group_id, group_name):
-    """Construye una estructura preprocesada para acceso rápido a los datos."""
-    signals_data = list()
-
-    for iot_signal in iot_signals:
-        device_signals = iot_signal["device_signals"]
-        for signal in device_signals:
-            if signal["group_id"] == group_id:
-
-                signals_data.append( 
-                    { 
-                    **signal, 
-                    'group_name': group_name,
-                    'value_protocol': 0,
-                    'value': 0,
-                    'quality': 0,
-                    'source': 0,
-                    'timestamp': 0
-                    }
-                )
-    #logging.info(f"Signals data preprocessed: {signals_data}")
-    return signals_data    
 
 def host_data_collection(realtime_data, device, device_signals):
     """Hilo de recolección de datos para un dispositivo específico.
@@ -92,28 +47,6 @@ def host_data_collection(realtime_data, device, device_signals):
     else:
         logging.warning(f"Unknown protocol_id {protocol_id} for device {device_id}")
 
-
-def build_realtime_data(realtime_data, iot_devices, iot_protocols, iot_signals, signals_group):
-    """constructor del diccionario realtime_data
-
-    Args:
-        iot_devices (list): lista de equipos
-        iot_protocols (list): lista de protocolos
-        iot_signals (list): listado de señales por equipo
-        signals_group (list): grupo de señalziacion en el sistema
-        realtime_data (dict): diciconario con las señales organizado segun signals_group
-    """
-    # preprocesar configuraciones
-    for group in signals_group:
-        group_id = group.get('group_id')
-        group_name = group.get('group_name')
-        if group_id == 0:
-            realtime_data[group_id] = build_configuration_devices(iot_devices, iot_protocols, group_name)
-            logging.info(f"Device configuration loaded")
-        else:
-            realtime_data[group_id] = build_configuration_signals(iot_signals, group_id, group_name)
-            logging.info(f"Signals configuration loaded for group {group_id}")
-    #return realtime_data
 
 def load_json(file_path):
     """Carga un archivo JSON con manejo de excepciones."""
@@ -139,8 +72,9 @@ if __name__ == "__main__":
 
     # Iniciar el servidor que expondrá los datos
     server = RealtimeDataManager(address=('127.0.0.1', 50000), authkey=b'secret')
-    server.start()
+
     try:
+        server.start()
         logging.info(f"Backend ejecutándose en 127.0.0.1:50000...")
 
         # Cargar configuraciones
@@ -149,10 +83,7 @@ if __name__ == "__main__":
         iot_signals = load_json("data/config_iot_signals.json")
         signals_group = load_json("data/config_signals_group.json")
 
-        #build_realtime_data(realtime_data, iot_devices, iot_protocols, iot_signals, signals_group)
-
         # Iniciar la recolección de datos
-        #start_data_collection(iot_devices, iot_signals, realtime_data)
         for device in iot_devices:
             if device["enabled"]:
                 device_signals = next((m["device_signals"] for m in iot_signals if m["device_id"] == device["device_id"]), ["Unknown"])
