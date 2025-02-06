@@ -19,13 +19,6 @@ logging.basicConfig(
     ]
 )
 
-
-def buscar_posicion(lista, llave, valor_buscado):
-    for i, diccionario in enumerate(lista):
-        if diccionario.get(llave) == valor_buscado:
-            return i  # Devuelve la posición (índice) donde se encuentra el valor
-    return -1  # Si no se encuentra el valor, retorna -1
-
 def update_realtime_data(realtime_data, device_id, signal, modbus_node):
     signal_id = signal.get('signal_id')
     scale_factor = signal.get('scale_factor', 1)
@@ -47,12 +40,7 @@ def update_realtime_data(realtime_data, device_id, signal, modbus_node):
         "group_id": signal.get('group_id'),
         "device_id": device_id
     }
-    realtime_data.update(
-        { 
-            signal_id: realtime_signal_value
-        }
-    )
-
+    realtime_data.update({ signal_id: realtime_signal_value})
 
 def new_modbus_node():
     modbus_node = {
@@ -108,7 +96,7 @@ def main(realtime_data, device, device_signals):
                         modbus_input_register = client.read_input_registers(reg_addr=address)
                         if modbus_input_register:
                             value = modbus_input_register[0]
-                            modbus_node.update({"value_protocol": value, "quality": 1, "source": 1})
+                            modbus_node.update({"value_protocol": value, "quality": 1, "source": 1}) #para quiality nos toca leer otro registro
                             logging.info(f"Datos leidos de device_id:{device_id}, signal_id: {signal_id}, modbus: {modbus_node}")
                             update_realtime_data(realtime_data, device_id, signal, modbus_node)
                             #logging.info(f"Data updated de device_id:{device_id}, signal_id: {signal_id}, realtime_data: {realtime_data.get(signal_id)}")
