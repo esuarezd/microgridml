@@ -3,10 +3,11 @@ import json
 import time
 import logging
 import os
+import sys
 from multiprocessing.managers import BaseManager
 
 #local import
-import app.modbus_client as modbus_client
+import app.modbus_tcp as modbus_tcp
 
 # Verificar si la carpeta 'logs' existe, si no, crearla
 if not os.path.exists('logs'):
@@ -33,13 +34,13 @@ def host_data_collection(realtime_data, device, device_signals):
     Args:
         device (dict): diccionario con los datos del equipo
         device_signals (dict): diccionario con las señales que se leen del equipo
-        realtime_data (dic): dicctionario con los datos de tiempo real del sistema
+        realtime_data (Proxy List): lista con los datos de tiempo real del sistema
     """
     device_id = device.get("device_id")
     protocol_id = device.get("protocol_id")
     if protocol_id == 0: # ModbusTcpClient
             logging.info(f"start connection to device {device_id}")
-            modbus_client.main(realtime_data, device, device_signals)
+            modbus_tcp.client(realtime_data, device, device_signals)
     elif protocol_id == 1: # Mqtt
         pass
     elif protocol_id == 2: # dds
@@ -65,7 +66,7 @@ def load_json(file_path):
 if __name__ == "__main__":
     manager = multiprocessing.Manager()
     realtime_data = manager.dict()
-
+    logging.info("Creando objeto multiprocess.manager", type(realtime_data))
     # Registrar el diccionario para que pueda ser accedido por otros procesos (como Streamlit)
     RealtimeDataManager.register('get_realtime_data', callable=lambda: realtime_data)
     logging.info("Método 'get_realtime_data' registrado con éxito.")
@@ -78,10 +79,10 @@ if __name__ == "__main__":
         logging.info(f"Backend ejecutándose en 127.0.0.1:50000...")
 
         # Cargar configuraciones
-        iot_devices = load_json("data/config_iot_devices.json")
-        iot_protocols = load_json("data/config_iot_protocols.json")
-        iot_signals = load_json("data/config_iot_signals.json")
-        signals_group = load_json("data/config_signals_group.json")
+        iot_devices = load_json("data/config_iot/devices.json")
+        iot_protocols = load_json("data/config_iot/protocols.json")
+        iot_signals = load_json("data/config_iot/signals.json")
+        signals_group = load_json("data/config_iot/groups.json")
 
         # Iniciar la recolección de datos
         for device in iot_devices:
@@ -90,16 +91,23 @@ if __name__ == "__main__":
 
                 process = multiprocessing.Process(
                     target=host_data_collection,
-                    args=(realtime_data, device, device_signals)
+                    args=(realtime_data, device, device_signals), 
+                    daemon=True
                 )
                 process.start()
-                logging.info(f"Proceso iniciado para el dispositivo {device['device_id']}: {device['device_name']}")
+                logging.info(f"datacollection.main: Proceso iniciado para el dispositivo {device['device_id']}: {device['device_name']}")
 
         # Mantener el backend activo
-        logging.info(f"Backend ejecutándose...")
+        logging.info(f"datacollection.main: Backend ejecutándose...")
         while True:
             time.sleep(5)
-    except Exception as e:
-        logging.error(f"Unexpected error for BaseManager: {e}")
-        logging.info("Shutting down server ...")
+    except KeyboardInterrupt:
+        # Captura la interrupción de Ctrl+C para terminar el proceso de manera controlada
+        logging.info("datacollection.main exception: Interrupción detectada (Ctrl+C), cerrando la aplicación.")
         server.shutdown()
+        sys.exit(0)  # Termina el script de manera limpia
+    except Exception as e:
+        logging.error(f"datacollection: Unexpected error for BaseManager: {e}")
+        logging.info("datacollection: Shutting down server ...")
+        server.shutdown()
+        sys.exit(1)  # Termina con un código de error

@@ -1,5 +1,8 @@
 import logging
 import os
+import subprocess
+import time
+import sys
 
 # Verificar si la carpeta 'logs' existe, si no, crearla
 if not os.path.exists('logs'):
@@ -15,49 +18,36 @@ logging.basicConfig(
     ]
 )
 
-def get_device_list(device_data):
-    # Constructor de lista de equipos con su estado
-    device_list = [
-        {
-            "enabled": device_info.get('enabled', None),
-            "device_id": device_info.get('device_id', None),
-            "device_name": device_info.get('device_name', None),
-            "host": device_info.get('host', None),
-            "protocol_name": device_info.get('protocol_name', None),
-            "connection_status": device_info.get('value')
-        }
-        for device_info in device_data
-    ]
-    return device_list
+def run_streamlit_app():
+    # Ejecutar Streamlit en segundo plano y obtener el objeto del proceso
+    process = subprocess.Popen(["streamlit", "run", "app/streamlit_app.py"])
+    
+    # Retornar el proceso para que puedas controlarlo más tarde (como detenerlo)
+    return process
 
+def stop_streamlit_app(process):
+    # Detener el proceso de Streamlit
+    process.terminate()  # Esto envía una señal para terminar el proceso (similar a Ctrl+C)
+    # Si quieres forzar el cierre (en caso de que no se detenga con terminate), usa kill:
+    # process.kill()
 
-
-"""
-elif st.session_state["page"] == "Devices":
-    st.title("Microgrid ML")
-    st.write("Estado comunicación de los Dispositivos IoT (Versión 1-Feb 9:23 pm)")
-    device_placeholder = st.empty()  # Reservar espacio para la tabla de dispositivos
-    while True:
-        if realtime_data:
-            devices = realtime_data.get(0, [])  # group_id = 0 para dispositivos
-            device_list = [
-                {
-                    "enabled": device.get("enabled"),
-                    "Device ID": device.get("device_id"),
-                    "Device Name": device.get("device_name"),
-                    "Host": device.get("host"),
-                    "Protocol": device.get("protocol_name"),
-                    "unit id": device.get('unit_id'),
-                    "Status": device.get("value", None),  # Este campo muestra "Good", "Failure", etc.
-                    "Last Updated": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(device.get("timestamp", 0)))
-                }
-                for device in devices
-            ]
-
-            df_devices = pd.DataFrame(device_list)
-            device_placeholder.dataframe(df_devices)
-        else:
-            device_placeholder.error("No hay información de dispositivos disponible.")
-
-        time.sleep(60)
-        """
+if __name__ == "__main__":
+    # Ejecuta Streamlit en segundo plano
+    try:
+        # solucion usando subprocess.popopen()
+        streamlit_process = run_streamlit_app()
+        logging.info("data_vis.main: Streamlit está ejecutándose... Para detenerlo, presiona Ctrl+C.")
+        while True:
+            time.sleep(10) 
+        # solucion con subprocess.run()
+        # subprocess.run(["streamlit", "run", "app/streamlit_app.py"])
+    except KeyboardInterrupt:
+        # Captura la interrupción de Ctrl+C para terminar el proceso de manera controlada
+        logging.info("data_vis.main exception: Interrupción detectada (Ctrl+C), cerrando la aplicación.")
+        stop_streamlit_app(streamlit_process)
+        sys.exit(0)  # Termina el script de manera limpia
+    except Exception as e:
+        logging.error(f"data_vis.main exception: Unexpected error for BaseManager: {e}")
+        logging.info("data_vis.main exception: Shutting down streamlit ...")
+        stop_streamlit_app(streamlit_process)
+        sys.exit(1)  # Termina con un código de error

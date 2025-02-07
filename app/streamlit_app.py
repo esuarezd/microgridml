@@ -6,7 +6,7 @@ import time
 import os
 from multiprocessing.managers import BaseManager
 
-# local
+# local import
 
 # Verificar si la carpeta 'logs' existe, si no, crearla
 if not os.path.exists('logs'):
@@ -34,21 +34,27 @@ def connect_to_realtime_data():
         manager = RealtimeDataManager(address=('127.0.0.1', 50000), authkey=b'secret')
         manager.connect()
         logging.info("Conectado al backend de datos en tiempo real.")
-        return manager.get_realtime_data()
+        manager_data = manager.get_realtime_data()
+        logging.info("Leyendo multiprocess basemanager:", type(manager_data))
+        realtime_data = manager_data.copy()
+        return realtime_data
     except Exception as e:
         logging.error(f"Error conectando a datos en tiempo real: {e}")
         return None
 
+    
 # Cargar configuraciones de señales y grupos
-with open('data/config_iot_signals.json') as f:
+with open('data/config_iot/devices.json') as f:
+    config_iot_devices = json.load(f)
+
+with open('data/config_iot/protocols.json') as f:
+    config_iot_protocols = json.load(f)
+
+with open('data/config_iot/signals.json') as f:
     config_iot_signals = json.load(f)
 
-with open('data/config_signals_group.json') as f:
-    config_signals_group = {group['group_id']: group['group_name'] for group in json.load(f)}
-
-with open('data/config_iot_devices.json') as f:
-    config_iot_devices = {device['device_id']: device['enabled'] for device in json.load(f)}
-
+with open('data/config_iot/groups.json') as f:
+    config_signals_group = json.load(f)
 
 # Configuración de la página
 st.set_page_config(
@@ -60,10 +66,10 @@ st.set_page_config(
 # Conexión al backend
 try:
     realtime_data = connect_to_realtime_data()
+
 except Exception as e:
     st.error(f"Error conectando a datos en tiempo real: {e}")
     logging.error(f"Error conectando a datos en tiempo real: {e}")
-    realtime_data = {}
 
 # Inicializar el estado de navegación
 if "page" not in st.session_state:
@@ -84,11 +90,12 @@ if st.session_state["page"] == "Home":
     st.title("Microgrid ML")
     st.write("Sistema IoT en ejecución.")
     # Convertir realtime_data a un diccionario regular antes de mostrarlo
-    while True: 
-        #codigo temporal para ver que se esta leyendo
-        realtime_data_dict = realtime_data.copy()
-        st.write("Datos en tiempo real:", realtime_data_dict)  # Mostrar los datos recibidos
-        time.sleep(60)
+    if realtime_data:
+        st.write("Datos en tiempo real", realtime_data)  # Mostrar los datos recibidos
+    
+    # Configurar actualización periódica (actualiza cada 10 segundos)
+    time.sleep(60)  # pausa en segundos
+    st.rerun()
 
 if st.session_state["page"] == "Realtime":
     st.title("Microgrid ML")
@@ -97,11 +104,10 @@ if st.session_state["page"] == "Realtime":
 
     while True:
         # Construcción de la tabla de tiempo real
-        realtime_data_dict = realtime_data.copy()
         data_list = []
-        for signal_id, signal in realtime_data_dict.items():
+        for signal in realtime_data:
             data_list.append({
-                "signal_id":signal_id,
+                "signal_id":signal.get('signal_id'),
                 "group_id": signal.get('group_id'),
                 "device_id": signal.get('device_id'),
                 "value protocol": signal.get('value_protocol'),
@@ -109,8 +115,6 @@ if st.session_state["page"] == "Realtime":
                 "value": signal.get('value'),
                 "timestamp": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(signal.get('timestamp')))
             })
-        df = pd.DataFrame(data_list)
-        placeholder.dataframe(df)
         df = pd.DataFrame(data_list)
         placeholder.dataframe(df)
 
@@ -125,5 +129,16 @@ elif st.session_state["page"] == "History":
 elif st.session_state["page"] == "Devices":
     st.title("Microgrid ML")
     st.write("Estado comunicación de los Dispositivos IoT (Versión 1-Feb 9:23 pm)")
-
-      
+    data_list = []
+    for device in config_iot_devices:
+        protocol_name = next((m["protocol_name"] for m in config_iot_protocols if m["protocol_id"] == device["protocol_id"]), "Unknown")
+        data_list.append({
+            "enabled": device.get('enabled'),
+            "device name": device.get('device_name'),
+            "host": device.get('host'),
+            "protocol": protocol_name,
+            "unit_id": device.get('unit_id'),
+            "unit name": device.get('unit_name')
+        })
+    df = pd.DataFrame(data_list)
+    st.dataframe(df)
