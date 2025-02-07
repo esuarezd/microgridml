@@ -2,7 +2,8 @@ import os
 from datastructure.list import array_list as array_list
 
 # Directorio de datos de los archivos
-data_dir = os.path.dirname(os.path.realpath('__file__')) + '/data/'
+#data_dir = os.path.dirname(os.path.realpath('__file__')) + '/data/'
+data_dir = 'data'
 
 def new_logic():
     # Creación del catalogo vacio

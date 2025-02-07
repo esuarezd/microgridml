@@ -1,26 +1,18 @@
-import logging
 import os
 import subprocess
 import time
 import sys
 
-# Verificar si la carpeta 'logs' existe, si no, crearla
-if not os.path.exists('logs'):
-    os.makedirs('logs')
+# Definir la ruta del directorio de logs 
+log_dir = 'logs/visualization'
+app_file = 'app/visualization/streamlit_app.py'
 
-# Configuración de logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler("logs/data_visualization.log", mode="a")
-    ]
-)
+# Crear las carpetas 'logs' y 'logs/collection' si no existen
+os.makedirs(log_dir, exist_ok=True)
 
 def run_streamlit_app():
     # Ejecutar Streamlit en segundo plano y obtener el objeto del proceso
-    process = subprocess.Popen(["streamlit", "run", "app/streamlit_app.py"])
+    process = subprocess.Popen(["streamlit", "run", app_file])
     
     # Retornar el proceso para que puedas controlarlo más tarde (como detenerlo)
     return process
@@ -36,18 +28,16 @@ if __name__ == "__main__":
     try:
         # solucion usando subprocess.popopen()
         streamlit_process = run_streamlit_app()
-        logging.info("data_vis.main: Streamlit está ejecutándose... Para detenerlo, presiona Ctrl+C.")
+        print("Streamlit está ejecutándose... Para detenerlo, presiona Ctrl+C.")
         while True:
             time.sleep(10) 
-        # solucion con subprocess.run()
-        # subprocess.run(["streamlit", "run", "app/streamlit_app.py"])
     except KeyboardInterrupt:
         # Captura la interrupción de Ctrl+C para terminar el proceso de manera controlada
-        logging.info("data_vis.main exception: Interrupción detectada (Ctrl+C), cerrando la aplicación.")
+        print("Interrupción detectada (Ctrl+C), cerrando la aplicación.")
         stop_streamlit_app(streamlit_process)
         sys.exit(0)  # Termina el script de manera limpia
     except Exception as e:
-        logging.error(f"data_vis.main exception: Unexpected error for BaseManager: {e}")
-        logging.info("data_vis.main exception: Shutting down streamlit ...")
+        print(f"Unexpected error for BaseManager: {e}")
+        print("Shutting down streamlit ...")
         stop_streamlit_app(streamlit_process)
         sys.exit(1)  # Termina con un código de error
