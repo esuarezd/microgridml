@@ -1,6 +1,6 @@
 import os
 
-from app.collection import logic as logic
+import app.collection.logic as logic
 
 # Definir la ruta del directorio de logs 
 log_dir = 'logs/collection'
