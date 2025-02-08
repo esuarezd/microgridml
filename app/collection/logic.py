@@ -57,8 +57,17 @@ def load_data(app):
     load_iot_data(app, "config_iot/signals.json", "signals")
     logging.info(f"logic: Load IoT data successfully. {type(app)}")
 
+def get_protocols_dict(app):
+    protocols = app["protocols"]
+    protocols_dict = {protocol["protocol_id"]: protocol["protocol_name"] for protocol in protocols["elements"]}
+    return protocols_dict
 
-def host_data_collection(realtime_data, device, device_signals):
+def get_groups_dict(app):
+    groups = app["groups"]
+    groups_dict = {group["group_id"]: group["group_name"] for group in groups["elements"]}
+    return groups_dict
+    
+def host_data_collection(realtime_data, device, device_signals, groups_dict):
     """Hilo de recolección de datos para un dispositivo específico.
 
     Args:
@@ -70,7 +79,7 @@ def host_data_collection(realtime_data, device, device_signals):
     protocol_id = device.get("protocol_id")
     if protocol_id == 0: # ModbusTcpClient
             logging.info(f"logic: start connection to device {device_id}")
-            modbus.client(realtime_data, device, device_signals)
+            modbus.client(realtime_data, device, device_signals, groups_dict)
     elif protocol_id == 1: # Mqtt
         pass
     elif protocol_id == 2: # dds
@@ -81,6 +90,8 @@ def host_data_collection(realtime_data, device, device_signals):
 def start_data_collection(realtime_data, app):
     
     # Iniciar la recolección de datos
+    groups_dict = get_groups_dict(app)
+    protocols_dict = get_protocols_dict(app)
     iot_devices = app["devices"]
     iot_signals = app["signals"]
     
@@ -90,7 +101,7 @@ def start_data_collection(realtime_data, app):
 
             process = multiprocessing.Process(
                 target=host_data_collection,
-                args=(realtime_data, device, device_signals), 
+                args=(realtime_data, device, device_signals, groups_dict), 
                 daemon=True
             )
             process.start()

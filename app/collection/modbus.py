@@ -17,16 +17,21 @@ logging.basicConfig(
     ]
 )
 
-def update_realtime_data(realtime_data, device_id, signal, modbus_node):
+def new_modbus_node():
     """_summary_
 
-    Args:
-        realtime_data (Proxy List): lista de las señales de tiempo real
-        device_id (int): id del equipo
-        signal (dict): datos de la señal del sensor
-        modbus_node (dict): datos de lectura via modbus asociado a signal
+    Returns:
+        dict: nodo modbus
     """
-    signal_id = signal.get('signal_id')
+    modbus_node = {
+        'value_protocol': 0,
+        'timestamp': 0,
+        'quality':0,
+        'source':0
+    }
+    return modbus_node
+
+def scale_value(signal,modbus_node):
     scale_factor = signal.get('scale_factor', 1)
     offset = signal.get('offset', 0)
     data_type = signal.get('data_type')
@@ -41,15 +46,23 @@ def update_realtime_data(realtime_data, device_id, signal, modbus_node):
         value_data_type = value_protocol
     
     value = offset + (value_data_type / scale_factor)
+    return value
+    
+def update_realtime_data(realtime_data, signal, modbus_node, value, groups_dict):
+    """_summary_
+
+    Args:
+        realtime_data (Proxy List): lista de las señales de tiempo real
+        device_id (int): id del equipo
+        signal (dict): datos de la señal del sensor
+        modbus_node (dict): datos de lectura via modbus asociado a signal
+    """
     realtime_signal_value = {
-        **modbus_node, 
-        "value_data_type": value_data_type,
+        **signal, # Copiar todos los elementos de signals
+        **modbus_node, # Copiar todos los elementos de modbus_node
         "value": value,
-        "group_id": signal.get('group_id'),
-        "device_id": device_id,
-        "signal_id": signal_id
     }
-    """ solucion para Dict Proxy:"""
+    signal_id = signal.get('signal_id')
     if signal_id not in realtime_data:  # Si la señal no existe en el diccionario
         # Agregar la nueva señal con su valor
         realtime_data[signal_id] = realtime_signal_value
@@ -57,21 +70,8 @@ def update_realtime_data(realtime_data, device_id, signal, modbus_node):
         # Actualizar el valor de la señal
         realtime_data[signal_id] = realtime_signal_value
 
-def new_modbus_node():
-    """_summary_
 
-    Returns:
-        dict: nodo modbus
-    """
-    modbus_node = {
-        'value_protocol': 0,
-        'timestamp': datetime.now().timestamp(),
-        'quality':0,
-        'source':0
-    }
-    return modbus_node
-
-def save_dictproxy_to_json(realtime_data, file_path='data/realtime_data_snapshot.json'):
+def save_dictproxy_to_json(realtime_data, file_path='data/realtime_data_DictProxy.json'):
     """Guarda el diccionario realtime_data en un archivo JSON para depuración."""
     try:
         # Convertir el diccionario compartido a uno normal antes de guardar
@@ -82,7 +82,7 @@ def save_dictproxy_to_json(realtime_data, file_path='data/realtime_data_snapshot
     except Exception as e:
         logging.error(f"modbus: Error al guardar realtime_data en JSON: {e}")
 
-def client(realtime_data, device, device_signals):
+def client(realtime_data, device, device_signals, groups_dict):
     """ Cliente tcp Modbus
 
     Args:
@@ -90,13 +90,13 @@ def client(realtime_data, device, device_signals):
         device_signals (list): listado de señales del equipo
         realtime_data (Proxy List): los datos de tiempo real del sistema
     """
-    device_id = device.get('device_id')
-    interval = device.get('interval', 60)
-    host = device.get('host')
-    port = device.get('port',502)
-    unit_id = device.get('unit_id', 1)
-    client = ModbusClient(host=host,port=port,unit_id=unit_id)
     try:
+        device_id = device.get('device_id')
+        interval = device.get('interval', 60)
+        host = device.get('host')
+        port = device.get('port',502)
+        unit_id = device.get('unit_id', 1)
+        client = ModbusClient(host=host,port=port,unit_id=unit_id)
         client.open()
         logging.info(f"modbus: Device {device_id} is open...")
         while True:
@@ -107,6 +107,7 @@ def client(realtime_data, device, device_signals):
                     function_code = signal.get('function_code', 4)
                     address = signal.get('address')
                     modbus_node = new_modbus_node()
+                    modbus_node['timestamp'] = datetime.now().timestamp()
                     if function_code == 1:
                         pass
                     elif function_code == 2:
@@ -114,10 +115,12 @@ def client(realtime_data, device, device_signals):
                     elif function_code == 4:
                         modbus_input_register = client.read_input_registers(reg_addr=address)
                         if modbus_input_register:
-                            value = modbus_input_register[0]
-                            modbus_node.update({"value_protocol": value, "source": 1}) #para quiality nos toca leer otro registro
-                            logging.info(f"modbus: Datos de device_id:{device_id}, signal_id: {signal_id}, modbus: {modbus_node}")
-                            update_realtime_data(realtime_data, device_id, signal, modbus_node)
+                            value_protocol = modbus_input_register[0]
+                            modbus_node["value_protocol"] = value_protocol 
+                            modbus_node["source"] = 1   #para quality nos toca leer otro registro
+                            logging.info(f"modbus: Datos de device: {device_id}, signal_id: {signal_id}, modbus: {modbus_node}")
+                            value = scale_value(signal,modbus_node)
+                            update_realtime_data(realtime_data, signal, modbus_node, value, groups_dict)
                             save_dictproxy_to_json(realtime_data)
                     else:
                         logging.warning(f"modbus: No hay function code definido para la señal con signal_id {signal.get('signal_id')}")

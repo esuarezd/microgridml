@@ -4,13 +4,11 @@ import logging
 import time
 import sys
 import os
-# Agregar la ruta de la raíz del proyecto al sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 import app.visualization.logic as logic
 
 # Definir la ruta del directorio de logs 
-log_file = 'logs/visualization/view.log'
+log_file = 'logs/visualization/streamlit_app.log'
 
 # Configurar el sistema de logging
 logging.basicConfig(
@@ -57,21 +55,27 @@ def build_devices_list(app):
     
     return output
 
-def build_group_1_list(realtime_data):
+def build_group_list(group_id):
     iot_signals = app["signals"]
     signals = iot_signals["elements"]
-    data_list = []
+    iot_groups = app["groups"]
+    groups = iot_groups["elements"]
+    group_dict = {group["group_id"]: group["group_name"] for group in groups}
+    output = []
     for signal in realtime_data.values():
-        data_list.append({
-            "signal_id":signal.get('signal_id'),
-            "group_id": signal.get('group_id'),
-            "device_id": signal.get('device_id'),
-            "value protocol": signal.get('value_protocol'),
-            "value data type": signal.get('value_data_type'),
-            "value": signal.get('value'),
-            "timestamp": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(signal.get('timestamp')))
-        })
-    return data_list
+        if group_id == signal.get('group_id'):
+            signal_info = {
+                "group_id": signal.get('group_id'),
+                "group_name": group_dict.get(signal.get('group_id'), "Unknown"),
+                "path1": signal.get('path1'),
+                "signal_id":signal.get('signal_id'),
+                "singal_name": signal.get('signal_name'),
+                "value protocol": signal.get('value_protocol'),
+                "value": signal.get('value'),
+                "timestamp": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(signal.get('timestamp')))
+            }
+            output.append(signal_info)
+    return output
 
 # Configuración de la página
 st.set_page_config(
@@ -97,8 +101,8 @@ if "page" not in st.session_state:
 # Sidebar con botones para navegar
 if st.sidebar.button("home"):
     st.session_state["page"] = "home"
-if st.sidebar.button("realtime"):
-    st.session_state["page"] = "realtime"
+if st.sidebar.button("measures"):
+    st.session_state["page"] = "measures"
 if st.sidebar.button("history"):
     st.session_state["page"] = "history"
 if st.sidebar.button("devices"):
@@ -109,18 +113,24 @@ if st.session_state["page"] == "home":
     st.title("Microgrid ML")
     st.write("Sistema IoT en ejecución.")
 
-if st.session_state["page"] == "realtime":
+if st.session_state["page"] == "measures":
     st.title("Microgrid ML")
-    st.write("Datos de tiempo real")
+    st.write("Generation measures")
     # Lista de llaves que deseas mostrar
-    group_1_list = build_group_1_list(app)
-    
+    group_1_list = build_group_list(1)
     df_group_1 = pd.DataFrame(group_1_list)
     st.dataframe(df_group_1) 
+    
+    st.write("Energy Storage measures")
+    # Lista de llaves que deseas mostrar
+    group_2_list = build_group_list(2)
+    df_group_2 = pd.DataFrame(group_2_list)
+    st.dataframe(df_group_2) 
 
 elif st.session_state["page"] == "history":
     st.title("Microgrid ML")
     st.write("Historial de lecturas de señales (en desarrollo).")
+    st.write(realtime_data)
 
 elif st.session_state["page"] == "devices":
     st.title("Microgrid ML")
