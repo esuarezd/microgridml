@@ -121,7 +121,7 @@ def client(realtime_data, device, device_signals, groups_dict):
                             logging.info(f"modbus: Datos de device: {device_id}, signal_id: {signal_id}, modbus: {modbus_node}")
                             value = scale_value(signal,modbus_node)
                             update_realtime_data(realtime_data, signal, modbus_node, value, groups_dict)
-                            save_dictproxy_to_json(realtime_data)
+                            #save_dictproxy_to_json(realtime_data)
                     else:
                         logging.warning(f"modbus: No hay function code definido para la señal con signal_id {signal.get('signal_id')}")
             time.sleep(interval)

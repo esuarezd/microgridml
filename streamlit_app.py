@@ -72,6 +72,7 @@ def build_group_list(group_id):
                 "singal_name": signal.get('signal_name'),
                 "value protocol": signal.get('value_protocol'),
                 "value": signal.get('value'),
+                "unit": signal.get('unit'),
                 "timestamp": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(signal.get('timestamp')))
             }
             output.append(signal_info)
@@ -126,6 +127,18 @@ if st.session_state["page"] == "measures":
     group_2_list = build_group_list(2)
     df_group_2 = pd.DataFrame(group_2_list)
     st.dataframe(df_group_2) 
+    
+    st.write("PCC measures")
+    # Lista de llaves que deseas mostrar
+    group_3_list = build_group_list(3)
+    df_group_3 = pd.DataFrame(group_3_list)
+    st.dataframe(df_group_3) 
+    
+    st.write("DBI measures")
+    # Lista de llaves que deseas mostrar
+    group_4_list = build_group_list(4)
+    df_group_4 = pd.DataFrame(group_4_list)
+    st.dataframe(df_group_4) 
 
 elif st.session_state["page"] == "history":
     st.title("Microgrid ML")

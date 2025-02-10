@@ -7,6 +7,12 @@ log_dir = 'logs/collection'
 
 # Crear las carpetas 'logs' y 'logs/collection' si no existen
 os.makedirs(log_dir, exist_ok=True)
+
+# Definir la ruta del directorio de la base de datos 
+db_dir = 'data/sqlite3'
+
+# Crear las carpetas 'logs' y 'logs/collection' si no existen
+os.makedirs(db_dir, exist_ok=True)
     
 # Main function
 def main():
