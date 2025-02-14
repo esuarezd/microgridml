@@ -64,13 +64,16 @@ def build_group_list(group_id):
     output = []
     for signal in realtime_data.values():
         if group_id == signal.get('group_id'):
+            signal_type = signal.get('signal_type')
             signal_info = {
                 "group_id": signal.get('group_id'),
                 "group_name": group_dict.get(signal.get('group_id'), "Unknown"),
                 "path1": signal.get('path1'),
+                "path2": signal.get('path2', ''),
                 "signal_id":signal.get('signal_id'),
                 "singal_name": signal.get('signal_name'),
-                "value protocol": signal.get('value_protocol'),
+                "signal_type": "Analog" if signal_type else "Digital",
+                # "value protocol": signal.get('value_protocol'),
                 "value": signal.get('value'),
                 "unit": signal.get('unit'),
                 "timestamp": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(signal.get('timestamp')))
