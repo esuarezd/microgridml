@@ -8,6 +8,7 @@ from multiprocessing.managers import BaseManager
 #local import
 from app.collection import modbus as modbus
 from datastructure.list import array_list as array_list
+from app.collection import model as model
 
 # Definir la ruta del directorio de logs 
 log_file = 'logs/collection/logic.log'
@@ -66,6 +67,24 @@ def get_groups_dict(app):
     groups = app["groups"]
     groups_dict = {group["group_id"]: group["group_name"] for group in groups["elements"]}
     return groups_dict
+
+def insert_sensor(signal_id, realtime_data):
+    name = realtime_data['signal_name']
+    data_type = realtime_data['data_type'] 
+    unit = realtime_data['unit'] 
+    physical_range = realtime_data['physical_range'] 
+    sensor_type = realtime_data['sensor_type'] 
+    group_id = realtime_data['group_id']
+    path1 = realtime_data['path1']
+    path2 = realtime_data['path2']
+    model.insert_sensor(signal_id, name, data_type, unit, physical_range, sensor_type, group_id, path1, path2) 
+
+def insert_data(signal_id, realtime_signal_value):
+    data_type = realtime_signal_value['data_type']
+    if data_type == 1: # analog
+        model.insert_analog(signal_id, realtime_signal_value['timestamp'], realtime_signal_value['value'], realtime_signal_value['quality'])
+    else: # discrete
+        model.insert_discrete(signal_id, realtime_signal_value['timestamp'], realtime_signal_value['value'], realtime_signal_value['quality'])
     
 def host_data_collection(realtime_data, device, device_signals, groups_dict):
     """Hilo de recolección de datos para un dispositivo específico.

@@ -3,6 +3,7 @@ import time
 import json
 from pyModbusTCP.client import ModbusClient
 from datetime import datetime
+from app.collection import logic as logic
 
 # Definir la ruta del directorio de logs 
 log_file = 'logs/collection/modbus.log'
@@ -66,11 +67,18 @@ def update_realtime_data(realtime_data, signal, modbus_node, value, groups_dict)
     if signal_id not in realtime_data:  # Si la señal no existe en el diccionario
         # Agregar la nueva señal con su valor
         realtime_data[signal_id] = realtime_signal_value
+        insert_sensor(signal_id, realtime_signal_value)
     elif realtime_data[signal_id].get('value') != value:  # Si el valor actual es diferente
         # Actualizar el valor de la señal
         realtime_data[signal_id] = realtime_signal_value
+        insert_data(signal_id, realtime_signal_value)
 
+def insert_sensor(signal_id, realtime_signal_value):
+    logic.insert_sensor(signal_id, realtime_signal_value)
 
+def insert_data(signal_id, realtime_signal_value):
+    logic.insert_data(signal_id, realtime_signal_value)
+    
 def save_dictproxy_to_json(realtime_data, file_path='data/realtime_data_DictProxy.json'):
     """Guarda el diccionario realtime_data en un archivo JSON para depuración."""
     try:
