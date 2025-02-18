@@ -1,24 +1,16 @@
+from datetime import datetime, timedelta
 import pandas as pd
+import numpy as np
 import streamlit as st
-import logging
-import time
-import sys
 import os
 
 import app.visualization.logic as logic
 
 # Definir la ruta del directorio de logs 
-log_file = 'logs/visualization/streamlit_app.log'
+log_dir = 'logs/visualization'
 
-# Configurar el sistema de logging
-logging.basicConfig(
-    level=logging.INFO,  # Nivel de severidad (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-    format="%(asctime)s [%(levelname)s] %(message)s",  # Formato del mensaje
-    handlers=[
-        logging.StreamHandler(),  # Mostrar en la terminal
-        logging.FileHandler(log_file, mode="a")  # Registrar en un archivo
-    ]
-)
+# Crear las carpetas 'logs' y 'logs/visualization' si no existen
+os.makedirs(log_dir, exist_ok=True)
 
 def new_iot_system():
     app = logic.new_iot_system()
@@ -31,54 +23,12 @@ def connect_to_realtime_data():
     realtime_data = logic.connect_to_realtime_data()
     return realtime_data
 
-def build_devices_list(app):
-    iot_devices = app["devices"]
-    devices = iot_devices.get("elements")
-    iot_protocols = app["protocols"]
-    protocols = iot_protocols.get('elements')
-    # Crear un diccionario de protocolos para mapear fácilmente
-    protocol_dict = {protocol["protocol_id"]: protocol["protocol_name"] for protocol in protocols}
-
-    # Extraer los datos que queremos y agregar el protocol_name
-    output = []
-    for device in devices:
-        # Crear el nuevo diccionario con los campos deseados
-        device_info = {
-            "enabled": device["enabled"],
-            "device_name": device["device_name"],
-            "host": device["host"],
-            "unit_id": device["unit_id"],
-            "unit_name": device["unit_name"],
-            "protocol_name": protocol_dict.get(device["protocol_id"], "Unknown")  # Buscar el nombre del protocolo
-        }
-        output.append(device_info)
-    
+def build_devices_list():
+    output = logic.build_devices_list(app)
     return output
 
 def build_group_list(group_id):
-    iot_signals = app["signals"]
-    signals = iot_signals["elements"]
-    iot_groups = app["groups"]
-    groups = iot_groups["elements"]
-    group_dict = {group["group_id"]: group["group_name"] for group in groups}
-    output = []
-    for signal in realtime_data.values():
-        if group_id == signal.get('group_id'):
-            signal_type = signal.get('signal_type')
-            signal_info = {
-                "group_id": signal.get('group_id'),
-                "group_name": group_dict.get(signal.get('group_id'), "Unknown"),
-                "path1": signal.get('path1'),
-                "path2": signal.get('path2', ''),
-                "signal_id":signal.get('signal_id'),
-                "singal_name": signal.get('signal_name'),
-                "signal_type": "Analog" if signal_type else "Digital",
-                # "value protocol": signal.get('value_protocol'),
-                "value": signal.get('value'),
-                "unit": signal.get('unit'),
-                "timestamp": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(signal.get('timestamp')))
-            }
-            output.append(signal_info)
+    output = logic.build_group_list(group_id, app, realtime_data)
     return output
 
 # Configuración de la página
@@ -95,7 +45,6 @@ try:
 
 except Exception as e:
     st.error(f"Error conectando a datos en tiempo real: {e}")
-    logging.error(f"view: Error conectando a datos en tiempo real: {e}")
     
 
 # Inicializar el estado de navegación
@@ -115,7 +64,7 @@ if st.sidebar.button("devices"):
 # Navegación entre páginas
 if st.session_state["page"] == "home":
     st.title("Microgrid ML")
-    st.write("Sistema IoT en ejecución.")
+    st.write(realtime_data)
 
 if st.session_state["page"] == "measures":
     st.title("Microgrid ML")
@@ -145,15 +94,30 @@ if st.session_state["page"] == "measures":
 
 elif st.session_state["page"] == "history":
     st.title("Microgrid ML")
-    st.write("Historial de lecturas de señales (en desarrollo).")
-    st.write(realtime_data)
+    d = st.date_input("initial date", datetime.date(2019, 7, 6))
+    st.write("date selected:", d)
+    data = {
+        'timestamp': pd.date_range(start='2024-01-01', periods=100, freq='H'),
+        'sensor': np.random.choice(['Sensor 1', 'Sensor 2', 'Sensor 3'], size=100),
+        'valor': np.random.random(100) * 100
+    }
+    df_data = pd.DataFrame(data)
+    # Selección del sensor
+    sensor_selected = st.selectbox("Elige el sensor", df_data['sensor'].unique())
+
+    # Rango de tiempo predefinido o personalizado
+    time_range = st.selectbox(
+        "Elige un rango de tiempo",
+        ['Últimos 2 días', 'Últimos 7 días', 'Últimos 30 días', 'Último mes', 'Rango personalizado']
+    )
+
 
 elif st.session_state["page"] == "devices":
     st.title("Microgrid ML")
     st.write("Equipos IoT del sistema.")
     
     # Lista de llaves que deseas mostrar
-    devices_list = build_devices_list(app)
+    devices_list = build_devices_list()
     
     df_devices = pd.DataFrame(devices_list)
     st.dataframe(df_devices)

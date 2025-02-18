@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from multiprocessing.managers import BaseManager
 
 #local import
@@ -70,3 +71,51 @@ def connect_to_realtime_data():
         logging.error(f"logic: Error conectando a datos en tiempo real: {e}")
         return None
     
+def build_devices_list(app):
+    iot_devices = app["devices"]
+    devices = iot_devices.get("elements")
+    iot_protocols = app["protocols"]
+    protocols = iot_protocols.get('elements')
+    # Crear un diccionario de protocolos para mapear fácilmente
+    protocol_dict = {protocol["protocol_id"]: protocol["protocol_name"] for protocol in protocols}
+
+    # Extraer los datos que queremos y agregar el protocol_name
+    output = []
+    for device in devices:
+        # Crear el nuevo diccionario con los campos deseados
+        device_info = {
+            "enabled": device["enabled"],
+            "device_name": device["device_name"],
+            "host": device["host"],
+            "unit_id": device["unit_id"],
+            "unit_name": device["unit_name"],
+            "protocol_name": protocol_dict.get(device["protocol_id"], "Unknown")  # Buscar el nombre del protocolo
+        }
+        output.append(device_info)
+    
+    return output
+
+def build_group_list(group_id, app, realtime_data):
+    iot_groups = app["groups"]
+    groups = iot_groups["elements"]
+    group_dict = {group["group_id"]: group["group_name"] for group in groups}
+    output = []
+    for signal in realtime_data.values():
+        if group_id == signal.get('group_id'):
+            signal_type = signal.get('signal_type')
+            signal_info = {
+                "group_id": signal.get('group_id'),
+                "group_name": group_dict.get(signal.get('group_id'), "Unknown"),
+                "path1": signal.get('path1'),
+                "path2": signal.get('path2', ''),
+                "signal_id":signal.get('signal_id'),
+                "singal_name": signal.get('signal_name'),
+                "signal_type": "Analog" if signal_type else "Digital",
+                # "value protocol": signal.get('value_protocol'),
+                "value": signal.get('value'),
+                "unit": signal.get('unit'),
+                "timestamp": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(signal.get('timestamp')))
+            }
+            output.append(signal_info)
+    return output
+

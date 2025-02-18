@@ -64,41 +64,19 @@ def insert_discrete(signal_id, timestamp, value, quality_code):
     conn.commit()
     conn.close()
     
-def agregar_varios_estudiantes(estudiantes):
+def read_analog_delta(signal_id, delta_time):
     conn, cursor = connect_db()
-    cursor.executemany('''
-        INSERT INTO estudiantes (apellido, nombre, codigo, nota)
-        VALUES (?, ?, ?, ?)
-    ''', estudiantes)
-    conn.commit()
-    conn.close()
-    
-def leer():
-    conn, cursor = connect_db()
-    intruccion = 'SELECT * FROM estudiantes'
-    cursor.execute(intruccion)
-    data = cursor.fetchall()
-    conn.commit()
-    conn.close()
-    for d in data:
-        print(d)
-    
-def read_analog():
-    conn, cursor = connect_db()
-    cursor.execute('SELECT * FROM analog')
+    # if timestamp is datetime: 
+    # cursor.execute('SELECT * FROM analog WHERE signal_id = ? AND timestamp >= datetime("now", ?)', (signal_id, delta_time))
+    # if timestamp is real:
+    cursor.execute('SELECT * FROM analog WHERE signal_id = ? AND timestamp >= strftime("%s", "now", ?)', (signal_id, delta_time))
     data = cursor.fetchall()
     conn.close()
-    for d in data:
-        print(d)
     return data
 
-estudiantes = [
-    ('Perez', 'Pedro', '1234', 4.5),
-    ('Gomez', 'Maria', '1235', 3.5),
-    ('Gonzalez', 'Jose', '1236', 3.0),
-    ('Rodriguez', 'Ana', '1237', 4.0),
-    ('Jimenez', 'Juan', '1238', 3.5),
-]
-#agregar_varios_estudiantes(estudiantes)
-
-# data = read_analog()
+def read_analog(signal_id, time_initial, time_final):
+    conn, cursor = connect_db()
+    cursor.execute('SELECT * FROM analog WHERE signal_id = ? AND timestamp >= ? AND timestamp <= ?', (signal_id, time_initial, time_final))
+    data = cursor.fetchall()
+    conn.close()
+    return data

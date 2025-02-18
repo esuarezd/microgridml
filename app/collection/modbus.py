@@ -126,7 +126,7 @@ def client(realtime_data, device, device_signals, groups_dict):
                             value_protocol = modbus_input_register[0]
                             modbus_node["value_protocol"] = value_protocol 
                             modbus_node["source"] = 1   #para quality nos toca leer otro registro
-                            logging.info(f"modbus: Datos de device: {device_id}, signal_id: {signal_id}, modbus: {modbus_node}")
+                            logging.info(f"modbus: device_id: {device_id}, signal_id: {signal_id}, modbus: {modbus_node}")
                             value = scale_value(signal,modbus_node)
                             update_realtime_data(realtime_data, signal, modbus_node, value, groups_dict)
                             #save_dictproxy_to_json(realtime_data)
