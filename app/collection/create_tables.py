@@ -5,9 +5,10 @@ dbfile = 'data/sqlite3/data.db'
 
 create_table_sensor = '''
 CREATE TABLE sensor (
-    id INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    signal_id INTEGER NOT NULL,
     name TEXT NOT NULL,
-    data_type TEXT NOT NULL,
+    signal_type INTEGER NOT NULL,
     unit TEXT,
     physical_range TEXT,
     sensor_type TEXT,
@@ -25,35 +26,35 @@ CREATE TABLE user (
 '''
 
 create_table_message = '''
-CREATE TABLE message (
+CREATE TABLE his_message (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     signal_id INTEGER NOT NULL,
     timestamp REAL NOT NULL,
     quality_code INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
-    FOREIGN KEY (signal_id) REFERENCES sensor(id) 
+    FOREIGN KEY (signal_id) REFERENCES sensor(signal_id) 
 );
 '''
 
 create_table_analog = '''
-CREATE TABLE analog (
+CREATE TABLE his_analog (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     signal_id INTEGER NOT NULL,
     timestamp REAL NOT NULL,                    
     value REAL NOT NULL,                        
     quality_code INTEGER NOT NULL,              
-    FOREIGN KEY (signal_id) REFERENCES sensor(id)  
+    FOREIGN KEY (signal_id) REFERENCES sensor(signal_id)  
 );
 '''
 
 create_table_discrete = '''
-CREATE TABLE discrete (
+CREATE TABLE his_discrete (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     signal_id INTEGER NOT NULL,
     timestamp REAL NOT NULL,
     value INTEGER NOT NULL,
     quality_code INTEGER NOT NULL,
-    FOREIGN KEY (signal_id) REFERENCES sensor(id) 
+    FOREIGN KEY (signal_id) REFERENCES sensor(signal_id) 
 );
 '''
 

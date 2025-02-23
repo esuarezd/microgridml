@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+import datetime
 from multiprocessing.managers import BaseManager
 
 #local import
@@ -94,6 +95,10 @@ def build_devices_list(app):
         output.append(device_info)
     
     return output
+
+def datetime_to_epoch(date_str):
+    dt = datetime.datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')  # Formato completo de fecha y hora
+    return int(dt.timestamp())  # Devuelve el timestamp en segundos
 
 def build_group_list(group_id, app, realtime_data):
     iot_groups = app["groups"]

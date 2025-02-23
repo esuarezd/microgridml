@@ -96,10 +96,8 @@ if st.session_state["page"] == "measures":
 
 elif st.session_state["page"] == "history":
     st.title("Microgrid ML")
-    d = st.date_input("initial date", datetime.date(2019, 7, 6))
-    st.write("date selected:", d)
     data = {
-        'timestamp': pd.date_range(start='2024-01-01', periods=100, freq='H'),
+        'timestamp': pd.date_range(start='2025-01-01', periods=100, freq='H'),
         'sensor': np.random.choice(['Sensor 1', 'Sensor 2', 'Sensor 3'], size=100),
         'valor': np.random.random(100) * 100
     }
@@ -110,7 +108,7 @@ elif st.session_state["page"] == "history":
     # Rango de tiempo predefinido o personalizado
     time_range = st.selectbox(
         "Elige un rango de tiempo",
-        ['Últimos 2 días', 'Últimos 7 días', 'Últimos 30 días', 'Último mes', 'Rango personalizado']
+        ['Últimos 2 días', 'Últimos 7 días', 'Últimos 30 días', 'Últimos 90 días', 'Rango personalizado']
     )
     
     # Filtrar datos por el rango de tiempo y el sensor seleccionado
@@ -123,14 +121,34 @@ elif st.session_state["page"] == "history":
     elif time_range == 'Últimos 30 días':
         end_date = datetime.datetime.now()
         start_date = end_date - datetime.timedelta(days=30)
-    elif time_range == 'Último mes':
+    elif time_range == 'Últimos 90 días':
         end_date = datetime.datetime.now()
-        start_date = end_date - datetime.timedelta(days=30)
+        start_date = end_date - datetime.timedelta(days=90)
     elif time_range == 'Rango personalizado':
-        start_date = st.date_input('Fecha de inicio', datetime.date(2024, 1, 1))
+        start_date = st.date_input('Fecha de inicio', datetime.date.today() - datetime.timedelta(days=7))
+        start_time = st.time_input('Hora de inicio', datetime.time(0, 0))  # Hora de inicio predeterminada a medianoche
+        
         end_date = st.date_input('Fecha de fin', datetime.date.today())
-        start_date = datetime.datetime.combine(start_date, datetime.min.time())
-        end_date = datetime.datetime.combine(end_date, datetime.min.time())
+        end_time = st.time_input('Hora de fin', datetime.time(23, 59, 59))
+        
+        # Combina la fecha y la hora
+        start_datetime = datetime.datetime.combine(start_date, start_time)  # Combina fecha y hora de inicio
+        end_datetime = datetime.datetime.combine(end_date, end_time)  # Combina fecha y hora de fin
+
+        # Mostrar las fechas y horas seleccionadas
+        st.write("Fecha y hora de inicio:", start_datetime)
+        st.write("Fecha y hora de fin:", end_datetime)
+        
+        # Convertir a epoch time
+        start_epoch = start_datetime.timestamp()
+        end_epoch = end_datetime.timestamp()
+
+        st.write("Epoch time de inicio:", start_epoch)
+        st.write("Epoch time de fin:", end_epoch)
+        
+        # Convertir start_datetime y end_datetime a datetime64[ns] (tipo de datos de pandas)
+        start_date = pd.to_datetime(start_datetime)
+        end_date = pd.to_datetime(end_datetime)
 
     # Filtrar los datos según el sensor y el rango de fechas
     filtered_df = df_data[(df_data['sensor'] == sensor_selected) & 
