@@ -1,7 +1,9 @@
-from datetime import datetime, timedelta
+import datetime
 import pandas as pd
+import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
+
 import os
 
 import app.visualization.logic as logic
@@ -110,6 +112,45 @@ elif st.session_state["page"] == "history":
         "Elige un rango de tiempo",
         ['Últimos 2 días', 'Últimos 7 días', 'Últimos 30 días', 'Último mes', 'Rango personalizado']
     )
+    
+    # Filtrar datos por el rango de tiempo y el sensor seleccionado
+    if time_range == 'Últimos 2 días':
+        end_date = datetime.datetime.now()
+        start_date = end_date - datetime.timedelta(days=2)
+    elif time_range == 'Últimos 7 días':
+        end_date = datetime.datetime.now()
+        start_date = end_date - datetime.timedelta(days=7)
+    elif time_range == 'Últimos 30 días':
+        end_date = datetime.datetime.now()
+        start_date = end_date - datetime.timedelta(days=30)
+    elif time_range == 'Último mes':
+        end_date = datetime.datetime.now()
+        start_date = end_date - datetime.timedelta(days=30)
+    elif time_range == 'Rango personalizado':
+        start_date = st.date_input('Fecha de inicio', datetime.date(2024, 1, 1))
+        end_date = st.date_input('Fecha de fin', datetime.date.today())
+        start_date = datetime.datetime.combine(start_date, datetime.min.time())
+        end_date = datetime.datetime.combine(end_date, datetime.min.time())
+
+    # Filtrar los datos según el sensor y el rango de fechas
+    filtered_df = df_data[(df_data['sensor'] == sensor_selected) & 
+                        (df_data['timestamp'] >= start_date) & 
+                        (df_data['timestamp'] <= end_date)]
+
+    # Mostrar los datos filtrados
+    st.write(filtered_df)
+
+    # Graficar los datos
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(filtered_df['timestamp'], filtered_df['valor'], label=sensor_selected, color='b')
+    ax.set_title(f"Datos del sensor {sensor_selected}")
+    ax.set_xlabel('Fecha')
+    ax.set_ylabel('Valor')
+    ax.grid(True)
+    ax.legend()
+
+    # Mostrar el gráfico en Streamlit
+    st.pyplot(fig)
 
 
 elif st.session_state["page"] == "devices":
