@@ -6,6 +6,7 @@ from multiprocessing.managers import BaseManager
 
 #local import
 from datastructure.list import array_list as array_list
+from app.collection import model as model
 
 # Definir la ruta del directorio de logs 
 log_file = 'logs/visualization/logic.log'
@@ -124,3 +125,26 @@ def build_group_list(group_id, app, realtime_data):
             output.append(signal_info)
     return output
 
+def read_analog_delta(signal_id, delta_time):
+    data = model.read_analog_delta(signal_id, delta_time)
+    return data
+
+def read_analog_path1():
+    data = model.read_sensor_path1(1)
+    return data
+
+def read_analog_path2(path1):
+    data = model.read_sensor_path2(1, path1)
+    return data
+
+def read_analog_names(path1, path2):
+    data = model.read_sensor_name(1, path1, path2)
+    return data
+
+def read_analog_signal_id(path1, path2, sensor_selected):
+    data = model.read_sensor_signal_id(1, path1, path2, sensor_selected)
+    return data
+
+def read_his_analog(signal_id, time_initial, time_final):
+    data = model.read_his_analog(signal_id, time_initial, time_final)
+    return data

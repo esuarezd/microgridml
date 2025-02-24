@@ -32,12 +32,12 @@ def new_modbus_node():
     }
     return modbus_node
 
-def scale_value(signal,modbus_node):
+def scale_value(signal, modbus_node):
     scale_factor = signal.get('scale_factor', 1)
     offset = signal.get('offset', 0)
-    data_type = signal.get('data_type')
+    data_type = signal.get('data_type', "int")
     value_protocol = modbus_node.get('value_protocol')
-    
+       
     if data_type == "uint16":
         # Convertir el valor a un número uint16
         value_data_type = value_protocol & 0xFFFF
@@ -58,10 +58,12 @@ def update_realtime_data(realtime_data, signal, modbus_node, value, groups_dict)
         signal (dict): datos de la señal del sensor
         modbus_node (dict): datos de lectura via modbus asociado a signal
     """
+    group_id = signal["group_id"]
     realtime_signal_value = {
         **signal, # Copiar todos los elementos de signals
         **modbus_node, # Copiar todos los elementos de modbus_node
         "value": value,
+        "group_name": groups_dict[group_id]
     }
     signal_id = signal.get('signal_id')
     if signal_id not in realtime_data:  # Si la señal no existe en el diccionario
@@ -72,6 +74,7 @@ def update_realtime_data(realtime_data, signal, modbus_node, value, groups_dict)
         # Actualizar el valor de la señal
         realtime_data[signal_id] = realtime_signal_value
         insert_data(signal_id, realtime_signal_value)
+        logging.info(f"modbus: signal_id: {signal_id} nuevo valor: {value}")
 
 def insert_sensor(signal_id, realtime_signal_value):
     logic.insert_sensor(signal_id, realtime_signal_value)
@@ -126,8 +129,8 @@ def client(realtime_data, device, device_signals, groups_dict):
                             value_protocol = modbus_input_register[0]
                             modbus_node["value_protocol"] = value_protocol 
                             modbus_node["source"] = 1   #para quality nos toca leer otro registro
-                            logging.info(f"modbus: device_id: {device_id}, signal_id: {signal_id}, modbus: {modbus_node}")
-                            value = scale_value(signal,modbus_node)
+                            logging.info(f"modbus: device_id: {device_id}, signal_id: {signal_id}, address: {address}, modbus: {modbus_node}")
+                            value = scale_value(signal, modbus_node)
                             update_realtime_data(realtime_data, signal, modbus_node, value, groups_dict)
                             #save_dictproxy_to_json(realtime_data)
                     else:

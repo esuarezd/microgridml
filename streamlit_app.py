@@ -103,28 +103,46 @@ elif st.session_state["page"] == "history":
     }
     df_data = pd.DataFrame(data)
     # Selección del sensor
-    sensor_selected = st.selectbox("Elige el sensor", df_data['sensor'].unique())
+    sensor_selected = st.selectbox("Choice sensor", df_data['sensor'].unique())
+    
+    data_path1 = logic.read_analog_path1()
+    df_data1 = pd.DataFrame(data_path1)
+    path1 = st.selectbox("path 1", df_data1[0].unique())
+    
+    data_path2 = logic.read_analog_path2(path1)
+    df_data2 = pd.DataFrame(data_path2)
+    path2 = st.selectbox("path 2", df_data2[0].unique())
+    
+    data_sensors = logic.read_analog_names(path1, path2)
+    df_sensors = pd.DataFrame(data_sensors)
+    sensor_selected = st.selectbox("Sensor", df_sensors[0].unique())
+    
+    data_signal_id = logic.read_analog_signal_id(path1, path2, sensor_selected)
+    signal_id = data_signal_id[0][0]
 
     # Rango de tiempo predefinido o personalizado
     time_range = st.selectbox(
-        "Elige un rango de tiempo",
-        ['Últimos 2 días', 'Últimos 7 días', 'Últimos 30 días', 'Últimos 90 días', 'Rango personalizado']
+        "Time range",
+        ['Yesterday', 'Last 2 days', 'Last 7 days', 'Last 30 days', 'Last 90 days', 'Custom']
     )
     
     # Filtrar datos por el rango de tiempo y el sensor seleccionado
-    if time_range == 'Últimos 2 días':
-        end_date = datetime.datetime.now()
-        start_date = end_date - datetime.timedelta(days=2)
-    elif time_range == 'Últimos 7 días':
-        end_date = datetime.datetime.now()
-        start_date = end_date - datetime.timedelta(days=7)
-    elif time_range == 'Últimos 30 días':
-        end_date = datetime.datetime.now()
-        start_date = end_date - datetime.timedelta(days=30)
-    elif time_range == 'Últimos 90 días':
-        end_date = datetime.datetime.now()
-        start_date = end_date - datetime.timedelta(days=90)
-    elif time_range == 'Rango personalizado':
+    if time_range == 'Yesterday':
+        end_datetime = datetime.datetime.now()
+        start_datetime = end_datetime - datetime.timedelta(days=1)
+    if time_range == 'Last 2 days':
+        end_datetime = datetime.datetime.now()
+        start_datetime = end_datetime - datetime.timedelta(days=2)
+    elif time_range == 'Last 7 days':
+        end_datetime = datetime.datetime.now()
+        start_datetime = end_datetime - datetime.timedelta(days=7)
+    elif time_range == 'Last 30 days':
+        end_datetime = datetime.datetime.now()
+        start_datetime = end_datetime - datetime.timedelta(days=30)
+    elif time_range == 'Last 90 days':
+        end_datetime = datetime.datetime.now()
+        start_datetime = end_datetime - datetime.timedelta(days=90)
+    elif time_range == 'Custom':
         start_date = st.date_input('Fecha de inicio', datetime.date.today() - datetime.timedelta(days=7))
         start_time = st.time_input('Hora de inicio', datetime.time(0, 0))  # Hora de inicio predeterminada a medianoche
         
@@ -135,26 +153,28 @@ elif st.session_state["page"] == "history":
         start_datetime = datetime.datetime.combine(start_date, start_time)  # Combina fecha y hora de inicio
         end_datetime = datetime.datetime.combine(end_date, end_time)  # Combina fecha y hora de fin
 
-        # Mostrar las fechas y horas seleccionadas
-        st.write("Fecha y hora de inicio:", start_datetime)
-        st.write("Fecha y hora de fin:", end_datetime)
-        
-        # Convertir a epoch time
-        start_epoch = start_datetime.timestamp()
-        end_epoch = end_datetime.timestamp()
+    # Mostrar las fechas y horas seleccionadas
+    st.write("Fecha y hora de inicio:", start_datetime)
+    st.write("Fecha y hora de fin:", end_datetime)
+    
+    # Convertir a epoch time
+    start_epoch = start_datetime.timestamp()
+    end_epoch = end_datetime.timestamp()
 
-        st.write("Epoch time de inicio:", start_epoch)
-        st.write("Epoch time de fin:", end_epoch)
+    st.write("Epoch time de inicio:", start_epoch)
+    st.write("Epoch time de fin:", end_epoch)
         
-        # Convertir start_datetime y end_datetime a datetime64[ns] (tipo de datos de pandas)
-        start_date = pd.to_datetime(start_datetime)
-        end_date = pd.to_datetime(end_datetime)
+    # Convertir start_datetime y end_datetime a datetime64[ns] (tipo de datos de pandas)
+    start_date = pd.to_datetime(start_datetime)
+    end_date = pd.to_datetime(end_datetime)
+    
+    data = logic.read_his_analog(signal_id, start_epoch, end_epoch)
 
     # Filtrar los datos según el sensor y el rango de fechas
     filtered_df = df_data[(df_data['sensor'] == sensor_selected) & 
                         (df_data['timestamp'] >= start_date) & 
                         (df_data['timestamp'] <= end_date)]
-
+    
     # Mostrar los datos filtrados
     st.write(filtered_df)
 
