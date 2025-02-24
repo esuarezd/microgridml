@@ -66,7 +66,7 @@ def insert_discrete(signal_id, timestamp, value, quality_code):
 
 def read_his_analog(signal_id, time_initial, time_final):
     conn, cursor = connect_db()
-    cursor.execute('SELECT * FROM his_analog WHERE signal_id = ? AND timestamp >= ? AND timestamp <= ?', (signal_id, time_initial, time_final))
+    cursor.execute('SELECT timestamp, value FROM his_analog WHERE signal_id = ? AND timestamp >= ? AND timestamp <= ?', (signal_id, time_initial, time_final))
     data = cursor.fetchall()
     conn.close()
     return data

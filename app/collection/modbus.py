@@ -74,7 +74,7 @@ def update_realtime_data(realtime_data, signal, modbus_node, value, groups_dict)
         # Actualizar el valor de la señal
         realtime_data[signal_id] = realtime_signal_value
         insert_data(signal_id, realtime_signal_value)
-        logging.info(f"modbus: signal_id: {signal_id} nuevo valor: {value}")
+        logging.info(f"modbus: signal_id: {signal_id} nuevo valor: {value} {signal['unit']}")
 
 def insert_sensor(signal_id, realtime_signal_value):
     logic.insert_sensor(signal_id, realtime_signal_value)

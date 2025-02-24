@@ -125,10 +125,6 @@ def build_group_list(group_id, app, realtime_data):
             output.append(signal_info)
     return output
 
-def read_analog_delta(signal_id, delta_time):
-    data = model.read_analog_delta(signal_id, delta_time)
-    return data
-
 def read_analog_path1():
     data = model.read_sensor_path1(1)
     return data

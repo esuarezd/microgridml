@@ -96,14 +96,7 @@ if st.session_state["page"] == "measures":
 
 elif st.session_state["page"] == "history":
     st.title("Microgrid ML")
-    data = {
-        'timestamp': pd.date_range(start='2025-01-01', periods=100, freq='H'),
-        'sensor': np.random.choice(['Sensor 1', 'Sensor 2', 'Sensor 3'], size=100),
-        'valor': np.random.random(100) * 100
-    }
-    df_data = pd.DataFrame(data)
-    # Selección del sensor
-    sensor_selected = st.selectbox("Choice sensor", df_data['sensor'].unique())
+    st.write("measurement history")
     
     data_path1 = logic.read_analog_path1()
     df_data1 = pd.DataFrame(data_path1)
@@ -143,47 +136,47 @@ elif st.session_state["page"] == "history":
         end_datetime = datetime.datetime.now()
         start_datetime = end_datetime - datetime.timedelta(days=90)
     elif time_range == 'Custom':
-        start_date = st.date_input('Fecha de inicio', datetime.date.today() - datetime.timedelta(days=7))
-        start_time = st.time_input('Hora de inicio', datetime.time(0, 0))  # Hora de inicio predeterminada a medianoche
+        start_date = st.date_input('Initial date', datetime.date.today() - datetime.timedelta(days=7))
+        start_time = st.time_input('Initial time', datetime.time(0, 0))  # Hora de inicio predeterminada a medianoche
         
-        end_date = st.date_input('Fecha de fin', datetime.date.today())
-        end_time = st.time_input('Hora de fin', datetime.time(23, 59, 59))
+        end_date = st.date_input('Final date', datetime.date.today())
+        end_time = st.time_input('Final time', datetime.time(23, 59, 59))
         
         # Combina la fecha y la hora
         start_datetime = datetime.datetime.combine(start_date, start_time)  # Combina fecha y hora de inicio
         end_datetime = datetime.datetime.combine(end_date, end_time)  # Combina fecha y hora de fin
 
     # Mostrar las fechas y horas seleccionadas
-    st.write("Fecha y hora de inicio:", start_datetime)
-    st.write("Fecha y hora de fin:", end_datetime)
+    #st.write("Fecha y hora de inicio:", start_datetime)
+    #st.write("Fecha y hora de fin:", end_datetime)
     
     # Convertir a epoch time
     start_epoch = start_datetime.timestamp()
     end_epoch = end_datetime.timestamp()
 
-    st.write("Epoch time de inicio:", start_epoch)
-    st.write("Epoch time de fin:", end_epoch)
+    #st.write("Epoch time de inicio:", start_epoch)
+    #st.write("Epoch time de fin:", end_epoch)
         
     # Convertir start_datetime y end_datetime a datetime64[ns] (tipo de datos de pandas)
     start_date = pd.to_datetime(start_datetime)
     end_date = pd.to_datetime(end_datetime)
     
     data = logic.read_his_analog(signal_id, start_epoch, end_epoch)
-
-    # Filtrar los datos según el sensor y el rango de fechas
-    filtered_df = df_data[(df_data['sensor'] == sensor_selected) & 
-                        (df_data['timestamp'] >= start_date) & 
-                        (df_data['timestamp'] <= end_date)]
+    df_data = pd.DataFrame(data, columns=['epoch', 'value'])
     
-    # Mostrar los datos filtrados
-    st.write(filtered_df)
-
+    
+    # Convertir el timestamp a fechas legibles (en este caso, segundos)
+    df_data['datetime'] = pd.to_datetime(df_data['epoch'], unit='s')
+    
+    #df_data = df_data.drop(columns=['epoch'])
+    st.write(df_data[['datetime', 'value']])
+    
     # Graficar los datos
     fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(filtered_df['timestamp'], filtered_df['valor'], label=sensor_selected, color='b')
-    ax.set_title(f"Datos del sensor {sensor_selected}")
-    ax.set_xlabel('Fecha')
-    ax.set_ylabel('Valor')
+    ax.plot(df_data['datetime'], df_data['value'], label=sensor_selected, color='b')
+    ax.set_title(f"sensor {sensor_selected}")
+    ax.set_xlabel('datetime')
+    ax.set_ylabel('value')
     ax.grid(True)
     ax.legend()
 
