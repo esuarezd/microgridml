@@ -98,3 +98,10 @@ def read_sensor_signal_id(signal_type, path1, path2, sensor_selected):
     data = cursor.fetchall()
     conn.close()
     return data
+
+def read_sensor_unit(signal_type, path1, path2, sensor_selected):
+    conn, cursor = connect_db()
+    cursor.execute('SELECT unit FROM sensor WHERE signal_type = ? AND path1 = ? AND path2 = ? AND name = ?', (signal_type, path1, path2, sensor_selected))
+    data = cursor.fetchall()
+    conn.close()
+    return data

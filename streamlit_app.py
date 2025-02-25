@@ -112,6 +112,9 @@ elif st.session_state["page"] == "history":
     
     data_signal_id = logic.read_analog_signal_id(path1, path2, sensor_selected)
     signal_id = data_signal_id[0][0]
+    
+    data_unit = logic.read_analog_unit(path1, path2, sensor_selected)
+    unit = data_unit[0][0]
 
     # Rango de tiempo predefinido o personalizado
     time_range = st.selectbox(
@@ -174,9 +177,9 @@ elif st.session_state["page"] == "history":
     # Graficar los datos
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(df_data['datetime'], df_data['value'], label=sensor_selected, color='b')
-    ax.set_title(f"sensor {sensor_selected}")
+    ax.set_title(f"sensor {sensor_selected} [{unit}]")
     ax.set_xlabel('datetime')
-    ax.set_ylabel('value')
+    ax.set_ylabel(f'value in {unit}')
     ax.grid(True)
     ax.legend()
 

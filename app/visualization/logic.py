@@ -141,6 +141,10 @@ def read_analog_signal_id(path1, path2, sensor_selected):
     data = model.read_sensor_signal_id(1, path1, path2, sensor_selected)
     return data
 
+def read_analog_unit(path1, path2, sensor_selected):
+    data = model.read_sensor_unit(1, path1, path2, sensor_selected)
+    return data
+
 def read_his_analog(signal_id, time_initial, time_final):
     data = model.read_his_analog(signal_id, time_initial, time_final)
     return data
