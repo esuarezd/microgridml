@@ -2,9 +2,9 @@ import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-import streamlit as st
-
 import os
+import streamlit as st
+import time
 
 import app.visualization.logic as logic
 
@@ -66,7 +66,48 @@ if st.sidebar.button("devices"):
 # Navegación entre páginas
 if st.session_state["page"] == "home":
     st.title("Microgrid ML")
-    st.write(realtime_data)
+    #st.write(realtime_data)
+
+    # Configuración del Dashboard
+
+    # Sección de estado general
+    col1, col2, col3 = st.columns(3)
+    col1.metric("status", "OK")
+    col2.metric("Local time", time.strftime("%H:%M"))
+    col3.metric("Last update", "Realtime")
+
+    # Sección de medición de energía
+    st.subheader("⚡ Energy Status")
+
+    col1, col2, col3 = st.columns(3)
+
+    # Carga de batería
+    stateofcharge = realtime_data[24]["value"]  # Simula porcentaje de batería
+    col1.metric("🔋 Battery", f"{stateofcharge} %")
+    # col1.progress(stateofcharge / 100)
+    batterypower = realtime_data[20]["value"]
+    col1.metric("Battery power",f"{batterypower} W")
+    
+
+    # Potencia del cargador solar
+    pv_power = realtime_data[17]["value"]
+    col2.metric("🌞 PV Charger", f"{pv_power} W")
+
+    # Potencias en inversor
+    inputpower1 = realtime_data[37]["value"]
+    inputpower2 = realtime_data[38]["value"]
+    inputpower3 = realtime_data[39]["value"]
+    inputpower = inputpower1 + inputpower2 + inputpower3
+    outputpower1 = realtime_data[49]["value"]
+    outputpower2 = realtime_data[50]["value"]
+    outputpower3 = realtime_data[51]["value"]
+    outputpower = outputpower1 + outputpower2 + outputpower3
+    outputfrequency = realtime_data[48]["value"]
+    col3.metric("🔌 AC input", f"{inputpower} W")
+    col3.metric("AC output", f"{outputpower} W")
+
+    # Simulación de actualización
+    st.session_state["page"] = "home"
 
 if st.session_state["page"] == "measures":
     st.title("Microgrid ML")
