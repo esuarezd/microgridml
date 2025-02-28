@@ -77,7 +77,7 @@ if st.session_state["page"] == "home":
     col3.metric("Last update", "Realtime")
 
     # Sección de medición de energía
-    st.subheader("⚡ Energy Status")
+    st.subheader("Energy Status")
 
     col1, col2, col3 = st.columns(3)
 
