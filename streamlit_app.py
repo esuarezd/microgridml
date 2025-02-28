@@ -83,10 +83,10 @@ if st.session_state["page"] == "home":
 
     # Carga de batería
     stateofcharge = realtime_data[24]["value"]  # Simula porcentaje de batería
-    col1.metric("🔋 Battery", f"{stateofcharge} %")
+    col1.metric("🔋 Battery charge", f"{stateofcharge} %")
     # col1.progress(stateofcharge / 100)
     batterypower = realtime_data[20]["value"]
-    col1.metric("Battery power",f"{batterypower} W")
+    col1.metric("🔋 Battery power",f"{batterypower} W")
     
 
     # Potencia del cargador solar
@@ -103,8 +103,8 @@ if st.session_state["page"] == "home":
     outputpower3 = realtime_data[51]["value"]
     outputpower = outputpower1 + outputpower2 + outputpower3
     outputfrequency = realtime_data[48]["value"]
-    col3.metric("🔌 AC input", f"{inputpower} W")
-    col3.metric("AC output", f"{outputpower} W")
+    col3.metric("⚡ AC input", f"{inputpower} W")
+    col3.metric("🔌 AC output", f"{outputpower} W")
 
     # Simulación de actualización
     st.session_state["page"] = "home"
