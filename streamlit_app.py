@@ -206,14 +206,14 @@ elif st.session_state["page"] == "history":
     end_date = pd.to_datetime(end_datetime)
     
     data = logic.read_his_analog(signal_id, start_epoch, end_epoch)
-    df_data = pd.DataFrame(data, columns=['epoch', 'value'])
+    df_data = pd.DataFrame(data, columns=['timestamp', 'value'])
     
     
     # Convertir el timestamp a fechas legibles (en este caso, segundos)
-    df_data['datetime'] = pd.to_datetime(df_data['epoch'], unit='s')
+    df_data['datetime'] = pd.to_datetime(df_data['timestamp'], unit='s')
     df_data['unit'] = unit
     
-    #df_data = df_data.drop(columns=['epoch'])
+    #mostramos el panda en la pagina web
     st.write(df_data[['datetime', 'value', 'unit']])
     
     # Graficar los datos

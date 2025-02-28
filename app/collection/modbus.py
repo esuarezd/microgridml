@@ -119,6 +119,8 @@ def client(realtime_data, device, device_signals, groups_dict):
                     address = signal.get('address')
                     modbus_node = new_modbus_node()
                     modbus_node['timestamp'] = datetime.now().timestamp()
+                    start_time = time.time()
+                    print(f"datetime.now().timestamp(): {modbus_node['timestamp']}; time(): {start_time}")
                     if function_code == 1:
                         pass
                     elif function_code == 2:
@@ -129,7 +131,7 @@ def client(realtime_data, device, device_signals, groups_dict):
                             value_protocol = modbus_input_register[0]
                             modbus_node["value_protocol"] = value_protocol 
                             modbus_node["source"] = 1   #para quality nos toca leer otro registro
-                            logging.info(f"modbus: device_id: {device_id}, signal_id: {signal_id}, address: {address}, modbus: {modbus_node}")
+                            print(f"modbus: device_id: {device_id}, signal_id: {signal_id}, address: {address}, modbus: {modbus_node}")
                             value = scale_value(signal, modbus_node)
                             update_realtime_data(realtime_data, signal, modbus_node, value, groups_dict)
                             #save_dictproxy_to_json(realtime_data)
