@@ -211,9 +211,10 @@ elif st.session_state["page"] == "history":
     
     # Convertir el timestamp a fechas legibles (en este caso, segundos)
     df_data['datetime'] = pd.to_datetime(df_data['epoch'], unit='s')
+    df_data['unit'] = unit
     
     #df_data = df_data.drop(columns=['epoch'])
-    st.write(df_data[['datetime', 'value']])
+    st.write(df_data[['datetime', 'value', 'unit']])
     
     # Graficar los datos
     fig, ax = plt.subplots(figsize=(10, 5))
