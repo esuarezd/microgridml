@@ -1,8 +1,8 @@
 import logging
-import time
+from time import time, sleep, strftime  #para tomar timestamp y esperar a la siguiente consulta
 import json
 from pyModbusTCP.client import ModbusClient
-from datetime import datetime
+from datetime import datetime # para presentar formato 
 from app.collection import logic as logic
 
 # Definir la ruta del directorio de logs 
@@ -118,9 +118,8 @@ def client(realtime_data, device, device_signals, groups_dict):
                     function_code = signal.get('function_code', 4)
                     address = signal.get('address')
                     modbus_node = new_modbus_node()
-                    modbus_node['timestamp'] = datetime.now().timestamp()
-                    start_time = time.time()
-                    print(f"datetime.now().timestamp(): {modbus_node['timestamp']}; time(): {start_time}")
+                    modbus_node['timestamp'] = time()
+                    local_datetime = datetime.fromtimestamp(modbus_node['timestamp'])
                     if function_code == 1:
                         pass
                     elif function_code == 2:
@@ -131,13 +130,13 @@ def client(realtime_data, device, device_signals, groups_dict):
                             value_protocol = modbus_input_register[0]
                             modbus_node["value_protocol"] = value_protocol 
                             modbus_node["source"] = 1   #para quality nos toca leer otro registro
-                            print(f"modbus: device_id: {device_id}, signal_id: {signal_id}, address: {address}, modbus: {modbus_node}")
+                            print(f"{local_datetime.strftime('%Y-%m-%d %H:%M:%S,%f')} modbus: device_id: {device_id}, signal_id: {signal_id}, address: {address}, modbus: {modbus_node}")
                             value = scale_value(signal, modbus_node)
                             update_realtime_data(realtime_data, signal, modbus_node, value, groups_dict)
                             #save_dictproxy_to_json(realtime_data)
                     else:
                         logging.warning(f"modbus: No hay function code definido para la señal con signal_id {signal.get('signal_id')}")
-            time.sleep(interval)
+            sleep(interval)
     
     except ConnectionError as ce:
         logging.error(f"modbus: Connection lost for device {device_id}: {ce}")

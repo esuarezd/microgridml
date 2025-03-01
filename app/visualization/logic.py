@@ -1,7 +1,7 @@
 import logging
 import os
 import time
-import datetime
+from datetime import datetime
 from multiprocessing.managers import BaseManager
 
 #local import
@@ -97,10 +97,6 @@ def build_devices_list(app):
     
     return output
 
-def datetime_to_epoch(date_str):
-    dt = datetime.datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')  # Formato completo de fecha y hora
-    return int(dt.timestamp())  # Devuelve el timestamp en segundos
-
 def build_group_list(group_id, app, realtime_data):
     iot_groups = app["groups"]
     groups = iot_groups["elements"]
@@ -109,6 +105,13 @@ def build_group_list(group_id, app, realtime_data):
     for signal in realtime_data.values():
         if group_id == signal.get('group_id'):
             signal_type = signal.get('signal_type')
+            
+            # Para la hora local
+            timestamp = signal.get('timestamp')
+            local_datetime = datetime.fromtimestamp(timestamp)
+            # Obtener la parte decimal del timestamp (microsegundos)
+            microseconds = int((timestamp - int(timestamp)) * 1_000_000)
+            
             signal_info = {
                 "group_id": signal.get('group_id'),
                 "group_name": group_dict.get(signal.get('group_id'), "Unknown"),
@@ -120,7 +123,8 @@ def build_group_list(group_id, app, realtime_data):
                 # "value protocol": signal.get('value_protocol'),
                 "value": signal.get('value'),
                 "unit": signal.get('unit'),
-                "timestamp": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(signal.get('timestamp')))
+                "timestamp": local_datetime.strftime('%Y-%m-%d %H:%M:%S') + f".{microseconds:06d}"
+                #"timestamp": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(signal.get('timestamp')))
             }
             output.append(signal_info)
     return output

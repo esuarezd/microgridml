@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -91,7 +91,7 @@ if st.session_state["page"] == "home":
 
     # Potencia del cargador solar
     pv_power = realtime_data[17]["value"]
-    col2.metric("🌞 PV Charger", f"{pv_power} W")
+    col2.metric("☀️ PV Charger", f"{pv_power} W")
 
     # Potencias en inversor
     inputpower1 = realtime_data[37]["value"]
@@ -160,65 +160,75 @@ elif st.session_state["page"] == "history":
     # Rango de tiempo predefinido o personalizado
     time_range = st.selectbox(
         "Time range",
-        ['Yesterday', 'Last 2 days', 'Last 7 days', 'Last 30 days', 'Last 90 days', 'Custom']
+        ['Last hour', 'Last day', 'Last 2 days', 'Last 7 days', 'Last 30 days', 'Yesterday', 'Custom']
     )
     
     # Filtrar datos por el rango de tiempo y el sensor seleccionado
-    if time_range == 'Yesterday':
-        end_datetime = datetime.datetime.now()
-        start_datetime = end_datetime - datetime.timedelta(days=1)
-    if time_range == 'Last 2 days':
-        end_datetime = datetime.datetime.now()
-        start_datetime = end_datetime - datetime.timedelta(days=2)
+    if time_range == 'Last hour':
+        end_datetime = datetime.now()
+        start_datetime = end_datetime - timedelta(hours=1)
+    elif time_range == 'Last day':
+        end_datetime = datetime.now()
+        start_datetime = end_datetime - timedelta(days=1)
+    elif time_range == 'Last 2 days':
+        end_datetime = datetime.now()
+        start_datetime = end_datetime - timedelta(days=2)
     elif time_range == 'Last 7 days':
-        end_datetime = datetime.datetime.now()
-        start_datetime = end_datetime - datetime.timedelta(days=7)
+        end_datetime = datetime.now()
+        start_datetime = end_datetime - timedelta(days=7)
     elif time_range == 'Last 30 days':
-        end_datetime = datetime.datetime.now()
-        start_datetime = end_datetime - datetime.timedelta(days=30)
-    elif time_range == 'Last 90 days':
-        end_datetime = datetime.datetime.now()
-        start_datetime = end_datetime - datetime.timedelta(days=90)
+        end_datetime = datetime.now()
+        start_datetime = end_datetime - timedelta(days=30)
+    elif time_range == 'Yesterday':
+        end_datetime = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)  # inicio de hoy
+        start_datetime = end_datetime - timedelta(days=1)  # inicio de ayer a las 00:00:00
+        end_datetime = end_datetime - timedelta(seconds=1)
     elif time_range == 'Custom':
-        start_date = st.date_input('Initial date', datetime.date.today() - datetime.timedelta(days=7))
-        start_time = st.time_input('Initial time', datetime.time(0, 0))  # Hora de inicio predeterminada a medianoche
+        start_date = st.date_input('Initial date', datetime.today())
+        start_time = st.time_input('Initial time', datetime.now()) 
         
-        end_date = st.date_input('Final date', datetime.date.today())
-        end_time = st.time_input('Final time', datetime.time(23, 59, 59))
+        end_date = st.date_input('Final date', datetime.today())
+        end_time = st.time_input('Final time', datetime.now())
+        
+        #imprimir 
+        #st.write("Start date: ", start_date, "Time: ", start_time)
+        #st.write("End date: ", end_date, "Time: ", end_time)
+        #st.write("Start date : ", start_date.strftime("%Y-%m-%d %H:%M:%S"))
         
         # Combina la fecha y la hora
-        start_datetime = datetime.datetime.combine(start_date, start_time)  # Combina fecha y hora de inicio
-        end_datetime = datetime.datetime.combine(end_date, end_time)  # Combina fecha y hora de fin
+        start_datetime = datetime.combine(start_date, start_time)  # Combina fecha y hora de inicio
+        end_datetime = datetime.combine(end_date, end_time)  # Combina fecha y hora de fin
 
-    # Mostrar las fechas y horas seleccionadas
-    #st.write("Fecha y hora de inicio:", start_datetime)
-    #st.write("Fecha y hora de fin:", end_datetime)
     
     # Convertir a epoch time
-    start_epoch = start_datetime.timestamp()
-    end_epoch = end_datetime.timestamp()
-
-    #st.write("Epoch time de inicio:", start_epoch)
-    #st.write("Epoch time de fin:", end_epoch)
-        
-    # Convertir start_datetime y end_datetime a datetime64[ns] (tipo de datos de pandas)
-    start_date = pd.to_datetime(start_datetime)
-    end_date = pd.to_datetime(end_datetime)
+    start_timestamp = start_datetime.timestamp()
+    end_timestamp = end_datetime.timestamp()
     
-    data = logic.read_his_analog(signal_id, start_epoch, end_epoch)
-    df_data = pd.DataFrame(data, columns=['timestamp', 'value'])
+    # Mostrar las fechas y horas seleccionadas
+    st.write("Initial timestamp :", start_datetime, start_timestamp)
+    st.write("Final timestamp :", end_datetime, end_timestamp)
     
+    #hacemos la consulta
+    data_his_analog = logic.read_his_analog(signal_id, start_timestamp, end_timestamp)
+    df_data_his_analog = pd.DataFrame(data_his_analog, columns=['timestamp', 'value'])
     
     # Convertir el timestamp a fechas legibles (en este caso, segundos)
-    df_data['datetime'] = pd.to_datetime(df_data['timestamp'], unit='s')
-    df_data['unit'] = unit
+    #df_data_his_analog['datetime'] = pd.to_datetime(df_data_his_analog['timestamp'], unit='s', utc=True)
+    
+    # Convertir a la zona horaria local (si está en UTC y necesitas convertirlo a tu zona local)
+    #df_data_his_analog['datetime'] = df_data_his_analog['datetime'].dt.tz_convert('America/Bogota')
+    
+    df_data_his_analog['datetime'] = df_data_his_analog['timestamp'].apply(lambda x: datetime.fromtimestamp(x))
+    
+    # agregamos la columna unidades
+    df_data_his_analog['unit'] = unit
     
     #mostramos el panda en la pagina web
-    st.write(df_data[['datetime', 'value', 'unit']])
+    st.write(df_data_his_analog[['datetime', 'value', 'unit']])
     
     # Graficar los datos
     fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(df_data['datetime'], df_data['value'], label=sensor_selected, color='b')
+    ax.plot(df_data_his_analog['datetime'], df_data_his_analog['value'], label=sensor_selected, color='b')
     ax.set_title(f"sensor {sensor_selected} [{unit}]")
     ax.set_xlabel('datetime')
     ax.set_ylabel(f'value in {unit}')
